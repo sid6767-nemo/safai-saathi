@@ -1,0 +1,35 @@
+/* Palette taken from Indian street infrastructure rather than "eco" branding.
+   Dry-bin blue and wet-bin green are the Swachh Bharat segregation colours, so the only green
+   in the app always means "wet waste". */
+:root {
+  --asphalt: #15171a; /* picker console ground, ink on the reporter side */
+  --asphalt-2: #1e2125;
+  --asphalt-3: #2a2e33;
+  --line-dark: #383d43;
+
+  --concrete: #e4e6e1; /* reporter surfaces: cool kerb grey */
+  --concrete-2: #f3f4f1;
+  --line-light: #c3c7c0;
+
+  --yellow: #ffc20e; /* auto-rickshaw canopy, hazard striping: brand and primary action */
+  --yellow-press: #e8ae00;
+  --dry: #1e5bc6; /* dry-bin blue */
+  --wet: #1b7a43; /* wet-bin green */
+  --red: #d12a25; /* rejections and flags */
+  --red-on-dark: #ff7a70;
+
+  --ink: #15171a;
+  --ink-2: #474c52;
+  --on-dark: #f3f4f1;
+  --on-dark-2: #a7adb4;
+  --page: #0c0d0f;
+
+  --font-display: 'Anek Latin', 'Arial Narrow', system-ui, sans-serif;
+  --font-body: 'Mukta', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  --font-deva: 'Anek Devanagari', 'Mukta', sans-serif;
+
+  --radius: 6px;
+  --col: 440px;
+  --hazard: repeating-linear-gradient(-45deg, var(--yellow) 0 8px, var(--asphalt) 8px 16px);
+}

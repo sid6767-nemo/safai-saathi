@@ -1,0 +1,18 @@
+{
+  "name": "safai-saathi",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Prototype marketplace that pays informal waste pickers to clear garbage spots reported by citizens, with live-camera, GPS and Claude vision proof checks.",
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/dev-server.mjs",
+    "check": "node scripts/check.mjs"
+  },
+  "engines": {
+    "node": ">=20.12"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.125.0",
+    "zod": "^4.6.5"
+  }
+}

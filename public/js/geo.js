@@ -1,0 +1,114 @@
+// Location: live GPS reads, distance maths, and the copy shown when location fails.
+
+export class GeoError extends Error {
+  constructor(kind) {
+    super(`Location error: ${kind}`);
+    this.kind = kind;
+  }
+}
+
+export const GEO_ERROR_COPY = {
+  insecure: {
+    title: 'Location needs a secure connection',
+    body: 'Browsers only share location with pages opened over https:// or from localhost.',
+    fix: 'Open the app from its https:// link and try again.',
+  },
+  unsupported: {
+    title: "This browser can't share location",
+    body: 'It has no Geolocation API.',
+    fix: 'Open the app in Chrome, Safari or Firefox.',
+  },
+  denied: {
+    title: 'Location access is blocked',
+    body: 'Safai Saathi needs your location to pin the spot so a picker can find it.',
+    fix: 'Allow location for this site from the icon in the address bar (on a phone: Settings, then your browser, then Location), then try again.',
+  },
+  unavailable: {
+    title: "We couldn't get a location fix",
+    body: 'The device has no GPS or network position right now.',
+    fix: 'Turn on location services, move away from thick walls, then try again.',
+  },
+  timeout: {
+    title: 'Location took too long',
+    body: 'No position arrived within 15 seconds.',
+    fix: 'Wait a few seconds with a clear view of the sky, then try again.',
+  },
+};
+
+const OPTIONS = { enableHighAccuracy: true, maximumAge: 0, timeout: 15_000 };
+
+function toFix(position) {
+  return {
+    lat: position.coords.latitude,
+    lng: position.coords.longitude,
+    accuracy: Math.round(position.coords.accuracy),
+    at: Date.now(),
+  };
+}
+
+function toGeoError(err) {
+  if (err.code === 1) return new GeoError('denied');
+  if (err.code === 3) return new GeoError('timeout');
+  return new GeoError('unavailable');
+}
+
+function unavailableReason() {
+  if (!window.isSecureContext) return new GeoError('insecure');
+  if (!('geolocation' in navigator)) return new GeoError('unsupported');
+  return null;
+}
+
+export function getPosition() {
+  return new Promise((resolve, reject) => {
+    const blocked = unavailableReason();
+    if (blocked) return reject(blocked);
+    navigator.geolocation.getCurrentPosition(
+      (p) => resolve(toFix(p)),
+      (e) => reject(toGeoError(e)),
+      OPTIONS,
+    );
+  });
+}
+
+// Keeps a fresh fix while a camera is open, so the photo and its location are read together.
+export function watchPosition(onFix, onError) {
+  const blocked = unavailableReason();
+  if (blocked) {
+    onError(blocked);
+    return () => {};
+  }
+  const id = navigator.geolocation.watchPosition(
+    (p) => onFix(toFix(p)),
+    (e) => onError(toGeoError(e)),
+    OPTIONS,
+  );
+  return () => navigator.geolocation.clearWatch(id);
+}
+
+const EARTH_RADIUS_M = 6_371_008.8;
+const rad = (deg) => (deg * Math.PI) / 180;
+
+// Haversine distance in metres.
+export function distanceM(a, b) {
+  const dLat = rad(b.lat - a.lat);
+  const dLng = rad(b.lng - a.lng);
+  const h =
+    Math.sin(dLat / 2) ** 2 + Math.cos(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.sin(dLng / 2) ** 2;
+  return 2 * EARTH_RADIUS_M * Math.asin(Math.sqrt(h));
+}
+
+// A point `northM` metres north and `eastM` metres east of `origin`.
+export function offsetM(origin, northM, eastM) {
+  const lat = origin.lat + northM / 111_320;
+  const lng = origin.lng + eastM / (111_320 * Math.cos(rad(origin.lat)));
+  return { lat, lng };
+}
+
+export function formatDistance(m) {
+  if (m < 1000) return `${Math.round(m)} m`;
+  return `${(m / 1000).toFixed(m < 10_000 ? 1 : 0)} km`;
+}
+
+export function formatCoords({ lat, lng }) {
+  return `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+}

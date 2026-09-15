@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="800" viewBox="0 0 800 800">
+  <!-- Placeholder illustration for a sample job: a few tea cups by a lamp post. Replace with a real photo. -->
+  <rect width="800" height="360" fill="#9FB4BF"/>
+  <rect y="230" width="800" height="130" fill="#7D8E86"/>
+  <path d="M0 260 q120 -60 240 -10 q120 -60 260 0 q140 -70 300 -10 V360 H0Z" fill="#5E7A5A"/>
+  <rect y="360" width="800" height="440" fill="#A5A29B"/>
+  <g stroke="#908D86" stroke-width="3">
+    <path d="M0 450H800M0 560H800M0 680H800M100 360V800M300 360V800M500 360V800M700 360V800"/>
+  </g>
+  <rect x="470" y="40" width="26" height="560" fill="#4A4F55"/>
+  <rect x="452" y="580" width="62" height="40" fill="#3A3E43"/>
+  <path d="M483 60 h120 v16 h-120z" fill="#4A4F55"/>
+  <path d="M580 76 h46 l-10 22 h-26z" fill="#E8E2C8"/>
+  <path d="M320 600l40 0 -7 58 -26 0z" fill="#FFFFFF" stroke="#C9C3B5" stroke-width="3"/>
+  <path d="M325 600l30 0" stroke="#B8412F" stroke-width="5"/>
+  <path d="M560 640l38 8 -16 52 -26 -6z" fill="#FFFFFF" stroke="#C9C3B5" stroke-width="3"/>
+  <path d="M396 690 l44 -14 18 30 -48 14z" fill="#F4EFE2" stroke="#C9C3B5" stroke-width="3" transform="rotate(-8 420 690)"/>
+  <ellipse cx="240" cy="690" rx="56" ry="18" fill="#F4EFE2" stroke="#C9C3B5" stroke-width="3"/>
+  <ellipse cx="240" cy="686" rx="36" ry="10" fill="#E2D9C2"/>
+  <path d="M640 590l30 0 -5 44 -20 0z" fill="#C08A4A"/>
+</svg>

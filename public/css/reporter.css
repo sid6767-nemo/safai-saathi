@@ -1,0 +1,523 @@
+/* Reporter side: fast, one-thumb, concrete and yellow. */
+
+/* Home */
+.home {
+  display: grid;
+  grid-template-rows: 1fr auto auto;
+  min-height: 100dvh;
+}
+
+.home-report {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  padding: 26px 22px 32px;
+}
+
+.wordmark {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.wordmark::after {
+  content: '';
+  flex-basis: 100%;
+  height: 6px;
+  max-width: 88px;
+  background: var(--hazard);
+}
+
+.wm-latin {
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 800;
+  font-stretch: 80%;
+}
+
+.wm-deva {
+  color: var(--ink-2);
+  font-family: var(--font-deva);
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.home-title {
+  margin-top: auto;
+  font-size: clamp(34px, 10vw, 44px);
+  font-stretch: 80%;
+}
+
+.home-link {
+  align-self: flex-start;
+  color: var(--ink);
+  font-weight: 600;
+  text-underline-offset: 3px;
+}
+
+.home-picker {
+  display: grid;
+  gap: 12px;
+  padding: 26px 22px;
+  background: var(--asphalt);
+  color: var(--on-dark);
+}
+
+.home-picker h2 {
+  font-size: 26px;
+}
+
+.home-picker p {
+  color: var(--on-dark-2);
+}
+
+.home-picker .btn-outline {
+  color: var(--yellow);
+}
+
+.home-picker :focus-visible,
+.home-foot :focus-visible {
+  outline-color: var(--yellow);
+}
+
+.home-foot {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 22px 24px;
+  border-top: 1px solid var(--line-dark);
+  background: var(--asphalt);
+  color: var(--on-dark-2);
+  font-size: 14px;
+}
+
+.home-foot .link {
+  flex: none;
+  min-height: 24px;
+  color: var(--on-dark);
+}
+
+/* Camera */
+.cam {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  overflow: hidden;
+  background: #000;
+}
+
+.cam-feed,
+.cam-frozen {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Pushed below the close button so the stamped job code in its top-left corner stays visible. */
+.cam-frozen {
+  top: calc(max(12px, env(safe-area-inset-top)) + 52px);
+  height: auto;
+  bottom: 0;
+  object-fit: contain;
+  object-position: top;
+}
+
+.cam-top {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: max(12px, env(safe-area-inset-top)) 12px 0;
+}
+
+.cam-close {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(21, 23, 26, 0.78);
+  color: var(--on-dark);
+  font-size: 19px;
+  text-decoration: none;
+}
+
+.cam-panel {
+  position: relative;
+  z-index: 3;
+  margin-top: auto;
+}
+
+.cam-hint {
+  margin: 0 12px 10px;
+  padding: 8px 12px;
+  border-radius: var(--radius);
+  background: rgba(21, 23, 26, 0.8);
+  font-size: 15px;
+}
+
+.shutter {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: calc(96px + env(safe-area-inset-bottom));
+  padding: 8px 0 env(safe-area-inset-bottom);
+  border: 0;
+  background: var(--yellow);
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 750;
+  font-stretch: 82%;
+  cursor: pointer;
+}
+
+.shutter::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 8px;
+  background: var(--hazard);
+}
+
+.shutter:active {
+  background: var(--yellow-press);
+}
+
+.shutter:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: -8px;
+}
+
+.shutter[disabled] {
+  cursor: progress;
+  opacity: 0.7;
+}
+
+/* Result sheet: the one raised surface, because it really does sit over the photo */
+.sheet {
+  display: grid;
+  gap: 14px;
+  max-height: 74dvh;
+  overflow-y: auto;
+  padding: 22px 18px calc(18px + env(safe-area-inset-bottom));
+  border-radius: 14px 14px 0 0;
+  background: var(--concrete);
+  color: var(--ink);
+  box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.45);
+}
+
+.sheet :focus-visible {
+  outline-color: var(--ink);
+}
+
+.sheet-busy {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.sheet-title {
+  font-size: 28px;
+}
+
+.sheet-title:focus {
+  outline: none;
+}
+
+.source-note {
+  color: var(--ink-2);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.source-manual {
+  color: var(--red);
+  font-weight: 600;
+}
+
+.verdict {
+  font-size: 19px;
+  line-height: 1.35;
+}
+
+.seen {
+  color: var(--ink-2);
+  font-size: 15px;
+}
+
+.receipt {
+  margin: 0;
+  border-top: 2px solid var(--ink);
+  border-bottom: 1px dashed var(--line-light);
+}
+
+.receipt-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+}
+
+.receipt-row + .receipt-row {
+  border-top: 1px dashed var(--line-light);
+}
+
+.receipt dd {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 700;
+  font-stretch: 85%;
+  font-variant-numeric: tabular-nums;
+}
+
+.receipt-main dd {
+  font-size: 42px;
+  line-height: 1;
+}
+
+.fine {
+  color: var(--ink-2);
+  font-size: 14px;
+}
+
+.evidence {
+  color: var(--ink-2);
+  font-size: 13px;
+}
+
+.fix {
+  padding: 10px 12px;
+  border-left: 4px solid var(--ink);
+  background: var(--concrete-2);
+}
+
+.sheet-actions {
+  display: grid;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.job-id {
+  color: var(--ink-2);
+  font-size: 14px;
+}
+
+/* The payout split, shown on the report confirmation */
+.split {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin: 0;
+  overflow: hidden;
+  border: 2px solid var(--ink);
+  border-radius: var(--radius);
+}
+
+.split > div {
+  padding: 10px;
+}
+
+.split > div + div {
+  border-left: 2px solid var(--ink);
+}
+
+.split dt {
+  color: var(--ink-2);
+  font-size: 13px;
+  line-height: 1.2;
+}
+
+.split dd {
+  margin: 4px 0 0;
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 700;
+  font-stretch: 82%;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.split-you {
+  background: var(--yellow);
+  color: var(--ink);
+}
+
+.split .split-you dt {
+  color: var(--ink);
+}
+
+/* Manual estimate */
+.seg {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.seg legend {
+  margin-bottom: 6px;
+  padding: 0;
+  font-weight: 600;
+}
+
+.seg-option {
+  position: relative;
+}
+
+.seg-option input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+}
+
+.seg-option span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 2px solid var(--ink);
+  border-radius: var(--radius);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.seg-option input:checked + span {
+  background: var(--ink);
+  color: var(--concrete);
+}
+
+.seg-option input:focus-visible + span {
+  outline: 3px solid var(--ink);
+  outline-offset: 2px;
+}
+
+/* My reports */
+.reports {
+  padding: 0 18px 28px;
+}
+
+.page-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 0 12px;
+  margin-left: -8px;
+}
+
+.page-head h1 {
+  font-size: 32px;
+}
+
+.reward-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  padding: 12px 0;
+  border-top: 2px solid var(--ink);
+  border-bottom: 1px solid var(--line-light);
+}
+
+.reward-strip strong {
+  font-family: var(--font-display);
+  font-size: 34px;
+  font-stretch: 82%;
+  font-variant-numeric: tabular-nums;
+}
+
+.reward-pending {
+  color: var(--ink-2);
+  font-size: 15px;
+}
+
+.report-list {
+  margin: 0 0 20px;
+  padding: 0;
+  list-style: none;
+}
+
+.report-row {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 12px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line-light);
+}
+
+.report-photos {
+  display: flex;
+  gap: 4px;
+  align-self: start;
+}
+
+.report-photos figure {
+  margin: 0;
+}
+
+.report-photos img {
+  width: 72px;
+  height: 72px;
+  border-radius: 4px;
+  background: var(--line-light);
+  object-fit: cover;
+}
+
+.report-photos figcaption {
+  color: var(--ink-2);
+  font-size: 12px;
+}
+
+.report-body {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  min-width: 0;
+}
+
+.report-status {
+  font-size: 16px;
+  line-height: 1.35;
+}
+
+.status-disputed {
+  color: var(--red);
+  font-weight: 600;
+}
+
+.reports .job-meta {
+  display: flex;
+  gap: 10px;
+  color: var(--ink-2);
+  font-size: 13px;
+}
+
+.report-row > .btn,
+.report-row > .flag-box {
+  grid-column: 1 / -1;
+}
+
+.flag-box {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+  border: 2px solid var(--red);
+  border-radius: var(--radius);
+  font-size: 15px;
+}
+
+.empty-light {
+  padding: 20px 0;
+  color: var(--ink-2);
+}
