@@ -1,9 +1,10 @@
-// POST /api/analyze  { image: dataURL }  ->  { is_waste_site, waste_type, severity, items_seen, reasoning }
-// Claude only labels the photo. The rupee amount is computed by the fixed formula in
+// POST /api/analyze  { image: dataURL }
+//   -> { is_waste_site, waste_type, severity, items_seen, reasoning, provider }
+// The AI only labels the photo. The rupee amount is computed by the fixed formula in
 // public/js/payout.js, so the model never sets a price directly.
 
 import { z } from 'zod';
-import { askForJson, imageBlock, jsonRoute } from './_lib/claude.js';
+import { askForJson, imageBlock, jsonRoute } from './_lib/ai.js';
 
 const Analysis = z.object({
   is_waste_site: z.boolean(),

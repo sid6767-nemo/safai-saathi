@@ -3,7 +3,7 @@
 **Photograph a garbage spot. A local waste picker gets paid to clear it.**
 
 Safai Saathi ("cleanliness companion") is an Uber-style marketplace prototype. Citizens report litter
-and dumps with a live photo. Claude vision sorts the waste and sizes the job, and nearby informal
+and dumps with a live photo. An AI vision model sorts the waste and sizes the job, and nearby informal
 waste pickers see it on a job board with the payout up front. Payment is released (in this prototype,
 simulated) only after a live, code-stamped, GPS-checked proof photo passes verification.
 
@@ -20,9 +20,10 @@ Works best on a phone, or a laptop browser narrowed to phone width. The camera n
 
 1. **Report.** Tap *Report waste*. The camera opens straight away (there is no upload option). Take
    the photo; the phone's GPS is read at the same moment and stamped into the picture.
-2. **AI analysis.** The photo goes to Claude (`claude-sonnet-4-6`), which returns structured JSON:
-   dry or wet, small/medium/large, what it sees, and one sentence of reasoning. A fixed formula turns
-   those labels into a payout.
+2. **AI analysis.** The photo goes to a vision model (Google Gemini `gemini-3.8-flash` on its free
+   tier by default, or Claude `claude-sonnet-4-6`; see [Choosing the AI](#choosing-the-ai)), which
+   returns structured JSON: dry or wet, small/medium/large, what it sees, and one sentence of
+   reasoning. A fixed formula turns those labels into a payout.
 3. **Notify.** *Report this spot* posts the job. Every simulated picker within 2 km can see it.
 4. **Accept.** On the picker dashboard, open jobs are sorted by distance from the selected picker.
    *Accept job* moves it to *In progress* and removes it from every other picker's list.
@@ -38,11 +39,11 @@ Works best on a phone, or a laptop browser narrowed to phone width. The camera n
 |---|---|
 | Live camera capture through `getUserMedia`; no file or gallery input exists anywhere (`npm run check` fails the build if one appears) | The 9 waste pickers: fixed positions placed around the first location the app reads |
 | GPS through the Geolocation API, read at the moment of capture | Notifications: "sent to N pickers" is a distance count, not a push message or SMS |
-| Claude vision analysis of the report photo, returned as schema-checked JSON | Payments: no money moves; "ward cleanup fund" is a label |
+| AI vision analysis of the report photo (Gemini or Claude), returned as schema-checked JSON | Payments: no money moves; "ward cleanup fund" is a label |
 | Payout formula (rule-based, documented below) | The 24-hour hold: a real timer, but it can be skipped in Demo controls |
 | One-time job code, burned into the proof photo's pixels | Ward officer review after a flag or an AI outage |
 | Time, code-expiry and 30 m distance checks on the proof photo | Accounts: there's no login; "Working as" switches between the simulated pickers |
-| Claude before/after comparison: reads the code, checks the spot is clear and that it's the same place | Storage: everything lives in this browser (localStorage + IndexedDB), no server database |
+| AI before/after comparison: reads the code, checks the spot is clear and that it's the same place | Storage: everything lives in this browser (localStorage + IndexedDB), no server database |
 | | Three sample jobs (tagged "Sample") with drawn placeholder photos |
 | | The job code is generated in the browser; production would issue it from the server |
 
@@ -55,9 +56,9 @@ The proof step is where fraud would happen, so it has the most checks. In order:
 | 1 | Taken after accepting | Device | The photo's timestamp is before the job's *Accept* time |
 | 2 | Job code still valid | Device | The code is more than 10 minutes old, so a photo can't be prepared in advance |
 | 3 | At the spot | Device | GPS puts the photo more than 30 m from the report (haversine distance) |
-| 4 | Code readable | Claude | The code read from the photo doesn't match. The expected code is never sent to the model: it reads what it sees and the server compares |
-| 5 | Spot is cleared | Claude | Waste is still visible where the before photo showed it |
-| 6 | Same place | Claude | Walls, kerbs, poles and buildings don't match the report photo |
+| 4 | Code readable | AI | The code read from the photo doesn't match. The expected code is never sent to the model: it reads what it sees and the server compares |
+| 5 | Spot is cleared | AI | Waste is still visible where the before photo showed it |
+| 6 | Same place | AI | Walls, kerbs, poles and buildings don't match the report photo |
 
 The code is shown on the live viewfinder and burned into the photo along with the time and GPS,
 so an AI-edited or pre-made "after" picture has no valid code, and there's no way to submit one
@@ -87,7 +88,23 @@ reporter reward = picker payout ÷ 20   (paid by the fund on top, not taken from
 
 Wet waste pays more because it's heavier, smells, and has to reach a compost or biogas site the same
 day. The rates are illustrative, not official ward rates, and live in
-[`public/js/config.js`](public/js/config.js). Claude only supplies the two labels; it never sets a price.
+[`public/js/config.js`](public/js/config.js). The AI only supplies the two labels; it never sets a price.
+
+## Choosing the AI
+
+Both providers get the same prompts and must return JSON matching the same schema, which the server
+checks before the app uses it. The report screen says which one answered.
+
+| | Google Gemini (default) | Anthropic Claude |
+|---|---|---|
+| Cost | Free tier (rate-limited) | Paid per use, about ₹2 per full report-to-payout cycle |
+| Key | [aistudio.google.com/apikey](https://aistudio.google.com/apikey) | [console.anthropic.com](https://console.anthropic.com) |
+| Setting | `GEMINI_API_KEY` (model: `GEMINI_MODEL`, default `gemini-3.8-flash`) | `ANTHROPIC_API_KEY` (model: `CLAUDE_MODEL`, default `claude-sonnet-4-6`) |
+
+If both keys are set, Gemini is used unless `AI_PROVIDER=claude`. Both services require the account
+holder to be 18 or older. On Gemini's free tier Google may use submitted photos to improve its
+products, and human reviewers may see them, so keep people's faces and anything private out of
+demo photos.
 
 ## Demo controls
 
@@ -105,11 +122,12 @@ The "spot is still dirty" rejection needs no control: take the proof photo witho
 
 ## Run it locally
 
-Needs Node 20.12 or newer and an [Anthropic API key](https://console.anthropic.com/).
+Needs Node 20.12 or newer and a free [Gemini API key](https://aistudio.google.com/apikey)
+(or an Anthropic key).
 
 ```bash
 npm install
-cp .env.example .env        # then paste your key into .env
+cp .env.example .env        # then paste your key after GEMINI_API_KEY=
 npm run dev                 # http://localhost:4173
 ```
 
@@ -122,7 +140,7 @@ functions in `api/`, no build step.
 
 ```bash
 vercel deploy --prod
-vercel env add ANTHROPIC_API_KEY production   # then redeploy
+vercel env add GEMINI_API_KEY production   # then redeploy
 ```
 
 The key stays on the server; the browser only ever talks to `/api/analyze` and `/api/verify`.
@@ -157,7 +175,9 @@ of metres from the anchor point, so their proof photos fail the 30 m check unles
 
 ```
 api/
-  _lib/claude.js      Anthropic client, image blocks, JSON output, error messages
+  _lib/ai.js          picks the provider, image blocks, answer validation, error messages
+  _lib/gemini.js      Google Gemini provider (REST, free tier)
+  _lib/claude.js      Anthropic Claude provider (SDK)
   analyze.js          POST /api/analyze: report photo -> type, size, reasoning
   verify.js           POST /api/verify: before + after -> code read, cleared, same place
 public/

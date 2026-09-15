@@ -1,11 +1,12 @@
 // POST /api/verify  { before, after, code, beforeIsIllustration }
-//   -> { code_read, code_matches, site_clean, same_place_likely, same_place_checked, remaining_waste, reasoning }
+//   -> { code_read, code_matches, site_clean, same_place_likely, same_place_checked, remaining_waste,
+//        reasoning, provider }
 //
 // The expected code is deliberately NOT given to the model: it reads whatever code it sees, and
 // the server compares. That way the model can't be nudged into "seeing" the right answer.
 
 import { z } from 'zod';
-import { HttpError, askForJson, imageBlock, jsonRoute } from './_lib/claude.js';
+import { HttpError, askForJson, imageBlock, jsonRoute } from './_lib/ai.js';
 
 const Verification = z.object({
   code_read: z.string(),

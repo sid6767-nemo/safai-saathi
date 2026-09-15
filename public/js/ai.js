@@ -46,6 +46,7 @@ export async function analyzePhoto(image) {
     itemsSeen: r.items_seen.slice(0, 5),
     reasoning: r.reasoning,
     source: 'ai',
+    provider: r.provider,
   };
 }
 

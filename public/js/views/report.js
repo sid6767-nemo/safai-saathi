@@ -200,7 +200,7 @@ export function mount(root) {
       case 'result': {
         const a = st.analysis;
         return html`<div class="sheet">
-          <p class="source-note">Estimated by Claude from your photo</p>
+          <p class="source-note">Estimated by AI (${a.provider ?? 'vision model'}) from your photo</p>
           ${tags(a)}
           <p class="verdict">${a.reasoning}</p>
           ${a.itemsSeen.length ? html`<p class="seen">Seen: ${a.itemsSeen.join(', ')}</p>` : ''}
