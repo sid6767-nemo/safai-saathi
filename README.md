@@ -11,7 +11,7 @@ simulated) only after a live, code-stamped, GPS-checked proof photo passes verif
 > The camera, GPS, AI analysis and fraud checks really run. The pickers, notifications and payments
 > are simulated. The table below marks the line exactly.
 
-**Live demo:** LIVE_URL
+**Live demo:** https://safai-saathi-mu.vercel.app
 Works best on a phone, or a laptop browser narrowed to phone width. The camera needs HTTPS, which the live link has.
 
 ---
