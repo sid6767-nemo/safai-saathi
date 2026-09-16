@@ -179,6 +179,35 @@ export function acceptJob(id, pickerId) {
   });
 }
 
+// A picker can hand a job back: it returns to the queue for everyone, and the code stops working.
+export function cancelJob(id, pickerId) {
+  commit((s) => {
+    const job = findJob(s, id);
+    if (job.status !== 'accepted' || job.acceptedBy !== pickerId) {
+      throw new JobError('notyours', 'This job is no longer yours to give up.');
+    }
+    Object.assign(job, {
+      status: 'open',
+      acceptedBy: null,
+      acceptedAt: null,
+      proof: null,
+      attempts: [],
+      givenUp: (job.givenUp ?? 0) + 1,
+    });
+  });
+}
+
+// The reporter can withdraw a spot while nobody has accepted it.
+export function withdrawReport(id) {
+  commit((s) => {
+    const job = findJob(s, id);
+    if (job.status !== 'open') {
+      throw new JobError('late', 'A picker has already accepted this report.');
+    }
+    Object.assign(job, { status: 'cancelled', cancelledAt: Date.now() });
+  });
+}
+
 export const codeExpired = (proof, at = Date.now()) => !proof || at - proof.issuedAt > CONFIG.codeTtlMin * 60_000;
 
 // Issues a fresh one-time code unless the current one is still valid.

@@ -5,10 +5,12 @@ import { demoBadge } from '../demo.js';
 import { distanceM, formatCoords, formatDistance, getPosition } from '../geo.js';
 import { jobReasoning, t } from '../i18n.js';
 import { rupees, sizeLabel, wasteLabel } from '../payout.js';
+import { mountMaps } from '../map.js';
 import { hydratePhotos } from '../photos.js';
 import {
   JobError,
   acceptJob,
+  cancelJob,
   activeJobFor,
   activePicker,
   earningsFor,
@@ -32,6 +34,8 @@ export function mount(root) {
       .then((fix) => ensureAnchor(fix, 'gps'))
       .catch(() => ensureAnchor(CONFIG.fallbackLocation, 'demo'));
   }
+
+  let confirmingCancel = null;
 
   const tags = (job, short = true) =>
     html`<div class="tags">
@@ -62,6 +66,8 @@ export function mount(root) {
         <div><dt>${t('picker.accepted')}</dt><dd>${clock(job.acceptedAt)}</dd></div>
       </dl>
       ${last ? html`<p class="last-reject" role="status">${t('picker.lastReject', { title: last.title })}</p>` : ''}
+      <div class="map-box" data-map="${job.lat},${job.lng}" role="img" aria-label="${t('map.title')}"></div>
+      <p class="map-note">${t('map.circle', { m: CONFIG.proofRadiusM })}</p>
       <a class="btn btn-primary btn-block" href="#/proof/${job.id}" data-key="mark-${job.id}">${t('picker.markCleaned')}</a>
       <p class="btn-help">${t('picker.markCleanedHelp')}</p>
       <a
@@ -71,6 +77,15 @@ export function mount(root) {
         href="https://www.google.com/maps/dir/?api=1&destination=${job.lat},${job.lng}"
         >${t('picker.directions')}</a
       >
+      ${confirmingCancel === job.id
+        ? html`<div class="confirm-box" role="group">
+            <p>${t('picker.giveUpNote')}</p>
+            <button class="btn btn-danger" data-act="give-up-confirm" data-id="${job.id}" data-key="give-up-${job.id}">
+              ${t('picker.giveUp')}
+            </button>
+            <button class="btn btn-quiet" data-act="give-up-cancel">${t('action.keep')}</button>
+          </div>`
+        : html`<button class="btn btn-quiet btn-block" data-act="give-up" data-id="${job.id}">${t('picker.giveUp')}</button>`}
     </article>`;
   };
 
@@ -192,9 +207,34 @@ export function mount(root) {
       </main>`,
     );
     hydratePhotos(root);
+    mountMaps(root);
   }
 
   root.addEventListener('click', (e) => {
+    const action = e.target.closest('[data-act]')?.dataset.act;
+    if (action === 'give-up') {
+      confirmingCancel = e.target.closest('[data-act]').dataset.id;
+      draw();
+      return;
+    }
+    if (action === 'give-up-cancel') {
+      confirmingCancel = null;
+      draw();
+      return;
+    }
+    if (action === 'give-up-confirm') {
+      const id = e.target.closest('[data-act]').dataset.id;
+      confirmingCancel = null;
+      try {
+        cancelJob(id, activePicker(getState()).id);
+        toast(t('picker.gaveUp'));
+      } catch {
+        toast(t('picker.giveUpLate'));
+        draw();
+      }
+      return;
+    }
+
     const btn = e.target.closest('[data-act="accept"]');
     if (!btn) return;
     const id = btn.dataset.id;

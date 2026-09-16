@@ -4,7 +4,7 @@ import { CONFIG } from '../config.js';
 import { t, tn } from '../i18n.js';
 import { rupees, sizeLabel, wasteLabel } from '../payout.js';
 import { hydratePhotos } from '../photos.js';
-import { JobError, flagJob, getState, pickerName, subscribe } from '../store.js';
+import { JobError, flagJob, getState, pickerName, subscribe, withdrawReport } from '../store.js';
 import { clock, countdown, html, render, timeAgo, toast } from '../ui.js';
 
 export function mount(root) {
@@ -28,11 +28,30 @@ export function mount(root) {
         })}<span class="mono" data-release="${job.releaseAt}">${countdown(job.releaseAt - Date.now())}</span>`;
       case 'disputed':
         return t('reports.status.disputed');
+      case 'cancelled':
+        return t('reports.status.cancelled');
       case 'released':
         return t('reports.status.released', { amount: rupees(job.payout.reporter) });
       default:
         return '';
     }
+  }
+
+  // While nobody has accepted a spot, the reporter can take it back.
+  function withdrawBox(job) {
+    if (job.status !== 'open') return '';
+    if (confirming !== job.id) {
+      return html`<button class="btn btn-quiet btn-block" data-act="withdraw" data-id="${job.id}" data-key="withdraw-${job.id}">
+        ${t('reports.withdraw')}
+      </button>`;
+    }
+    return html`<div class="confirm-box" role="group">
+      <p>${t('reports.withdrawNote')}</p>
+      <button class="btn btn-danger" data-act="withdraw-confirm" data-id="${job.id}" data-key="withdraw-yes-${job.id}">
+        ${t('reports.withdraw')}
+      </button>
+      <button class="btn btn-quiet" data-act="flag-cancel">${t('action.keep')}</button>
+    </div>`;
   }
 
   function flagBox(job) {
@@ -92,7 +111,7 @@ export function mount(root) {
                     <p class="report-status status-${job.status}">${statusLine(s, job)}</p>
                     <p class="job-meta"><span class="mono">${job.id}</span><span>${timeAgo(job.createdAt)}</span></p>
                   </div>
-                  ${flagBox(job)}
+                  ${flagBox(job)} ${withdrawBox(job)}
                 </li>`,
               )}
             </ol>`
@@ -106,9 +125,17 @@ export function mount(root) {
   root.addEventListener('click', (e) => {
     const el = e.target.closest('[data-act]');
     if (!el) return;
-    if (el.dataset.act === 'flag') confirming = el.dataset.id;
+    if (el.dataset.act === 'flag' || el.dataset.act === 'withdraw') confirming = el.dataset.id;
     else if (el.dataset.act === 'flag-cancel') confirming = null;
-    else if (el.dataset.act === 'flag-confirm') {
+    else if (el.dataset.act === 'withdraw-confirm') {
+      confirming = null;
+      try {
+        withdrawReport(el.dataset.id);
+        toast(t('reports.withdrawn'));
+      } catch (err) {
+        toast(err instanceof JobError ? t('reports.withdrawLate') : err.message);
+      }
+    } else if (el.dataset.act === 'flag-confirm') {
       confirming = null;
       try {
         flagJob(el.dataset.id);

@@ -590,8 +590,13 @@
 }
 
 .report-row > .btn,
-.report-row > .flag-box {
+.report-row > .flag-box,
+.report-row > .confirm-box {
   grid-column: 1 / -1;
+}
+
+.report-row > .confirm-box {
+  border-color: var(--red);
 }
 
 .flag-box {

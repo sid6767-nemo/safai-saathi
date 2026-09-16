@@ -26,7 +26,10 @@ Works best on a phone, or a laptop browser narrowed to phone width. The camera n
    reasoning. A fixed formula turns those labels into a payout.
 3. **Notify.** *Report this spot* posts the job. Every simulated picker within 2 km can see it.
 4. **Accept.** On the picker dashboard, open jobs are sorted by distance from the selected picker.
-   *Accept job* moves it to *In progress* and removes it from every other picker's list.
+   *Accept job* moves it to *In progress*, shows a map of the spot with the 30 m proof circle drawn
+   on it, and removes the job from every other picker's list. A picker who can't get there can
+   *Give up this job* and it returns to the queue; a reporter can *Withdraw this report* while
+   nobody has accepted it.
 5. **Proof.** *Mark as cleaned* opens the live camera with a one-time job code on screen. The photo
    is stamped with that code, the time and the GPS position, then checked (see below).
 6. **Payout.** If every check passes, the payout is held for 24 hours, during which the reporter can
@@ -106,6 +109,15 @@ If both keys are set, Gemini is used unless `AI_PROVIDER=claude`. Both services 
 holder to be 18 or older. On Gemini's free tier Google may use submitted photos to improve its
 products, and human reviewers may see them, so keep people's faces and anything private out of
 demo photos.
+
+## The map
+
+The spot is shown on a map inside the app, with a circle at the 30 m radius the proof photo has to
+be taken inside. Set `MAPS_EMBED_KEY` (a [Google Maps Embed](https://developers.google.com/maps/documentation/embed/get-api-key)
+key, which needs a Google Cloud billing account even though the Embed API itself is free) and the
+map is Google Maps. With no key, it draws [OpenStreetMap](https://www.openstreetmap.org/copyright)
+tiles through Leaflet, which needs no key at all. The only thing that still opens another app is
+the walking-directions link, which is what a phone's map app is genuinely better at.
 
 ## Demo controls
 
