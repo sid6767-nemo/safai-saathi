@@ -20,6 +20,12 @@
   gap: 12px;
 }
 
+.home-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .wordmark {
   display: grid;
   gap: 2px;
@@ -86,6 +92,15 @@
   grid-template-columns: 34px 1fr;
   gap: 12px;
   align-items: start;
+  animation: step-in 320ms var(--ease-out) both;
+  animation-delay: calc(var(--step, 1) * 70ms);
+}
+
+@keyframes step-in {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
 }
 
 .how-num {
@@ -94,7 +109,7 @@
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  background: var(--kumkum);
+  background: var(--info);
   color: #fff;
   font-family: var(--font-display);
   font-size: 18px;
@@ -106,7 +121,7 @@
 }
 
 .how-step:nth-child(3) .how-num {
-  background: var(--dry);
+  background: var(--verified);
 }
 
 .how-text {
@@ -236,7 +251,7 @@
   padding: 8px 0 env(safe-area-inset-bottom);
   border: 0;
   background: var(--yellow);
-  color: var(--ink);
+  color: var(--on-accent);
   font-family: var(--font-display);
   font-size: 28px;
   font-weight: 800;
@@ -434,11 +449,11 @@
 
 .split-picker {
   background: var(--yellow);
-  color: var(--ink);
+  color: var(--on-accent);
 }
 
 .split .split-picker dt {
-  color: var(--ink);
+  color: var(--on-accent);
 }
 
 /* Manual estimate */

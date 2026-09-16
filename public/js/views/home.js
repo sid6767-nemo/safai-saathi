@@ -1,6 +1,31 @@
 import { LANGUAGES, language, t, tn } from '../i18n.js';
 import { getState, subscribe } from '../store.js';
+import { theme } from '../theme.js';
 import { html, render } from '../ui.js';
+
+// Sun when it's dark, moon when it's light: the icon shows what tapping will give you.
+export const themeButton = (dark = false) => {
+  const toDark = theme() !== 'dark';
+  return html`<button
+    class="icon-btn theme-btn${dark ? ' theme-btn-dark' : ''}"
+    type="button"
+    data-action="theme"
+    data-key="theme"
+    aria-label="${t(toDark ? 'theme.toDark' : 'theme.toLight')}"
+    title="${t(toDark ? 'theme.toDark' : 'theme.toLight')}"
+  >
+    ${toDark
+      ? html`<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+          <path fill="currentColor" d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z" />
+        </svg>`
+      : html`<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+          <path
+            fill="currentColor"
+            d="M12 17a5 5 0 1 1 0-10 5 5 0 0 1 0 10Zm0-13.2a1 1 0 0 1-1-1V2a1 1 0 1 1 2 0v.8a1 1 0 0 1-1 1Zm0 18.4a1 1 0 0 1-1-1V20a1 1 0 1 1 2 0v1.2a1 1 0 0 1-1 1ZM22 13h-1.2a1 1 0 1 1 0-2H22a1 1 0 1 1 0 2ZM3.2 13H2a1 1 0 1 1 0-2h1.2a1 1 0 1 1 0 2Zm15.3-6.3a1 1 0 0 1-.7-1.7l.8-.8a1 1 0 1 1 1.4 1.4l-.8.8a1 1 0 0 1-.7.3ZM5.2 20a1 1 0 0 1-.7-1.7l.8-.8a1 1 0 1 1 1.4 1.4l-.8.8a1 1 0 0 1-.7.3Zm14.1 0a1 1 0 0 1-.7-.3l-.8-.8a1 1 0 1 1 1.4-1.4l.8.8a1 1 0 0 1-.7 1.7ZM6 6.7a1 1 0 0 1-.7-.3l-.8-.8a1 1 0 0 1 1.4-1.4l.8.8A1 1 0 0 1 6 6.7Z"
+          />
+        </svg>`}
+  </button>`;
+};
 
 // The language menu appears on both entry screens, so either user can switch.
 export const languageMenu = (dark = false) =>
@@ -35,7 +60,7 @@ export function mount(root) {
               <span class="wm-latin">Safai Saathi</span>
               <span class="wm-deva" lang="hi">सफ़ाई साथी</span>
             </p>
-            ${languageMenu()}
+            <div class="home-controls">${languageMenu()} ${themeButton()}</div>
           </div>
           <h1 class="home-title">${t('home.tagline')}</h1>
           <div class="home-cta">
@@ -49,7 +74,7 @@ export function mount(root) {
           <h2 class="how-title" id="how-title">${t('home.how')}</h2>
           <ol class="how-steps">
             ${STEPS.map(
-              (n) => html`<li class="how-step">
+              (n) => html`<li class="how-step" style="--step: ${n}">
                 <span class="how-num">${n}</span>
                 <span class="how-text">
                   <strong>${t(`home.how${n}.title`)}</strong>

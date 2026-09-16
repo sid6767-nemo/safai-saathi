@@ -21,7 +21,7 @@ import {
   subscribe,
 } from '../store.js';
 import { clock, countdown, flip, html, render, timeAgo, toast } from '../ui.js';
-import { languageMenu } from './home.js';
+import { languageMenu, themeButton } from './home.js';
 
 const NEW_FOR_MS = 5 * 60_000;
 
@@ -153,6 +153,7 @@ export function mount(root) {
               )}
             </select>
           </label>
+          ${themeButton(true)}
           <button class="icon-btn" type="button" data-action="demo" aria-label="${t('home.demo')}">
             <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
               <path

@@ -113,11 +113,23 @@ demo photos.
 ## The map
 
 The spot is shown on a map inside the app, with a circle at the 30 m radius the proof photo has to
-be taken inside. Set `MAPS_EMBED_KEY` (a [Google Maps Embed](https://developers.google.com/maps/documentation/embed/get-api-key)
+be taken inside. The maximise button opens it full screen, clear of the action buttons, and
+**Show the walk from here** draws the route from where the picker is standing, with the distance and
+a rough walking time. The line comes from [OSRM](https://project-osrm.org/)'s free public server,
+which serves only its car profile, so the app follows that street route but works the walking time
+out from the distance itself (about 4.8 km/h) rather than trusting OSRM's driving duration.
+
+Set `MAPS_EMBED_KEY` (a [Google Maps Embed](https://developers.google.com/maps/documentation/embed/get-api-key)
 key, which needs a Google Cloud billing account even though the Embed API itself is free) and the
-map is Google Maps. With no key, it draws [OpenStreetMap](https://www.openstreetmap.org/copyright)
-tiles through Leaflet, which needs no key at all. The only thing that still opens another app is
-the walking-directions link, which is what a phone's map app is genuinely better at.
+map becomes Google Maps, with Google's own walking directions in the full-screen view. With no key
+it draws [OpenStreetMap](https://www.openstreetmap.org/copyright) tiles through Leaflet, which needs
+no key at all.
+
+## Light and dark
+
+The toggle sits next to the language menu on both entry screens and is remembered per browser; with
+no choice saved the app follows the phone's own setting. Only the four surface tokens in
+[`tokens.css`](public/css/tokens.css) change between themes, so every component follows.
 
 ## Demo controls
 

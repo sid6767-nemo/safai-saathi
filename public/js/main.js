@@ -1,6 +1,7 @@
 import { initDemoControls, redrawDemoControls } from './demo.js';
 import { LANGUAGES, initialLanguage, loadLanguage } from './i18n.js';
 import { releaseDue } from './store.js';
+import { initTheme, toggleTheme } from './theme.js';
 import * as home from './views/home.js';
 import * as job from './views/job.js';
 import * as picker from './views/picker.js';
@@ -51,8 +52,17 @@ document.addEventListener('change', (e) => {
   }
 });
 
+// Light/dark toggle: the palette is CSS, but the button's own label has to be redrawn.
+document.addEventListener('click', (e) => {
+  if (e.target.closest('[data-action="theme"]')) {
+    toggleTheme();
+    route();
+  }
+});
+
 window.addEventListener('hashchange', route);
 
+initTheme();
 await loadLanguage(initialLanguage());
 initDemoControls();
 route();
