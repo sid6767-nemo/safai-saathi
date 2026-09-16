@@ -205,6 +205,7 @@ export const strings = {
   'reject.noLocation.body': "{body} Without your location the proof can't be matched to the reported spot.",
 
   // Job result
+  'job.title': 'Job result',
   'job.releasesIn': 'Payout releases in',
   'job.holdNote': 'The person who reported this spot can flag it during these {hours} hours if it still looks dirty.',
   'job.released': 'Payout released',

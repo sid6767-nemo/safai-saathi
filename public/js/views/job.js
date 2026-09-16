@@ -11,7 +11,7 @@ import { checkLabel } from '../verify.js';
 const celebrated = new Set();
 
 export function mount(root, jobId) {
-  document.title = `${t('proof.verified')} – Safai Saathi`;
+  document.title = `${t('job.title')} ${jobId} – Safai Saathi`;
   root.classList.add('is-dark');
 
   const split = (job) =>
