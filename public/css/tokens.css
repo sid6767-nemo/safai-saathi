@@ -1,35 +1,67 @@
-/* Palette taken from Indian street infrastructure rather than "eco" branding.
-   Dry-bin blue and wet-bin green are the Swachh Bharat segregation colours, so the only green
-   in the app always means "wet waste". */
+/* Palette from Indian street and festival colour rather than "eco" branding.
+   Dry-bin blue and wet-bin green are the Swachh Bharat segregation colours, so the only green in
+   the app always means "wet waste". Marigold marks work in progress; kumkum pink marks rewards. */
 :root {
-  --asphalt: #15171a; /* picker console ground, ink on the reporter side */
-  --asphalt-2: #1e2125;
-  --asphalt-3: #2a2e33;
-  --line-dark: #383d43;
+  --asphalt: #14161a; /* picker console ground, ink on the reporter side */
+  --asphalt-2: #1d2126;
+  --asphalt-3: #292e35;
+  --line-dark: #3a4048;
 
-  --concrete: #e4e6e1; /* reporter surfaces: cool kerb grey */
-  --concrete-2: #f3f4f1;
-  --line-light: #c3c7c0;
+  --concrete: #e2e5e0; /* reporter surfaces: cool kerb grey */
+  --concrete-2: #f2f4f0;
+  --line-light: #bfc4bd;
 
   --yellow: #ffc20e; /* auto-rickshaw canopy, hazard striping: brand and primary action */
-  --yellow-press: #e8ae00;
+  --yellow-press: #e0a800;
+  --marigold: #ff7a1a; /* work in progress */
+  --kumkum: #e8336d; /* rewards and the reporter's share */
   --dry: #1e5bc6; /* dry-bin blue */
   --wet: #1b7a43; /* wet-bin green */
   --red: #d12a25; /* rejections and flags */
   --red-on-dark: #ff7a70;
 
-  --ink: #15171a;
-  --ink-2: #474c52;
-  --on-dark: #f3f4f1;
-  --on-dark-2: #a7adb4;
-  --page: #0c0d0f;
+  --ink: #14161a;
+  --ink-2: #454a51;
+  --on-dark: #f2f4f0;
+  --on-dark-2: #a8aeb6;
+  --page: #0b0c0e;
 
-  --font-display: 'Anek Latin', 'Arial Narrow', system-ui, sans-serif;
+  /* Type. Display is Latin-first; Indic scripts swap in Anek below so all four read alike. */
+  --font-display: 'Bricolage Grotesque', 'Anek Latin', system-ui, sans-serif;
   --font-body: 'Mukta', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
   --font-deva: 'Anek Devanagari', 'Mukta', sans-serif;
 
-  --radius: 6px;
-  --col: 440px;
+  --display-stretch: 100%;
+  --radius: 8px;
   --hazard: repeating-linear-gradient(-45deg, var(--yellow) 0 8px, var(--asphalt) 8px 16px);
+
+  /* Hard offset shadows, like painted signage: no soft grey blur anywhere. */
+  --press-shadow: 4px 4px 0 var(--ink);
+  --press-shadow-dark: 4px 4px 0 #000;
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-pop: cubic-bezier(0.2, 0.9, 0.3, 1.4);
+}
+
+:root[data-script='deva'] {
+  --font-display: 'Anek Devanagari', 'Bricolage Grotesque', sans-serif;
+  --font-body: 'Mukta', system-ui, sans-serif;
+  --display-stretch: 100%;
+}
+
+:root[data-script='taml'] {
+  --font-display: 'Anek Tamil', 'Bricolage Grotesque', sans-serif;
+  --font-body: 'Mukta Malar', system-ui, sans-serif;
+}
+
+:root[data-script='knda'] {
+  --font-display: 'Anek Kannada', 'Bricolage Grotesque', sans-serif;
+  --font-body: 'Baloo Tamma 2', system-ui, sans-serif;
+}
+
+/* Indic scripts need more line height and no width compression to stay legible. */
+:root[data-script='taml'],
+:root[data-script='knda'],
+:root[data-script='deva'] {
+  --display-line: 1.25;
 }

@@ -1,4 +1,5 @@
 import { CONFIG } from './config.js';
+import { locale, t } from './i18n.js';
 
 // Rule-based estimate, driven by the AI's two labels:
 //
@@ -16,9 +17,8 @@ export function estimatePayout(wasteType, severity) {
   return { picker, reporter, fundTotal: picker + reporter, base, multiplier };
 }
 
-const inr = new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 });
+// Latin digits in every language, so amounts stay quick to read.
+export const rupees = (amount) => `₹${new Intl.NumberFormat(locale(), { maximumFractionDigits: 0 }).format(amount)}`;
 
-export const rupees = (amount) => `₹${inr.format(amount)}`;
-
-export const WASTE_LABEL = { dry: 'Dry waste', wet: 'Wet waste' };
-export const SIZE_LABEL = { small: 'Small', medium: 'Medium pile', large: 'Large dump' };
+export const wasteLabel = (type, short = false) => t(`waste.${type}${short ? '.short' : ''}`);
+export const sizeLabel = (severity) => t(`size.${severity}`);

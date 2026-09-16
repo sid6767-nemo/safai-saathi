@@ -1,4 +1,6 @@
-// Small rendering helpers: an escaping html`` tag, time formatting, and the three motion moments.
+// Small rendering helpers: an escaping html`` tag, time formatting, and the motion moments.
+
+import { locale } from './i18n.js';
 
 class Raw {
   constructor(s) {
@@ -31,27 +33,28 @@ export function render(el, tpl) {
   if (key) el.querySelector(`[data-key="${CSS.escape(key)}"]`)?.focus();
 }
 
-const timeFmt = new Intl.DateTimeFormat('en-IN', { hour: '2-digit', minute: '2-digit', hour12: false });
-const stampFmt = new Intl.DateTimeFormat('en-IN', {
-  day: 'numeric',
-  month: 'short',
-  year: 'numeric',
-  hour: '2-digit',
-  minute: '2-digit',
-  second: '2-digit',
-  hour12: false,
-  timeZoneName: 'short',
-});
+export const clock = (ts) =>
+  new Intl.DateTimeFormat(locale(), { hour: '2-digit', minute: '2-digit', hour12: false }).format(ts);
 
-export const clock = (ts) => timeFmt.format(ts);
-export const stamp = (ts) => stampFmt.format(ts);
+export const stamp = (ts) =>
+  new Intl.DateTimeFormat('en-IN', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+    timeZoneName: 'short',
+  }).format(ts);
 
+// Relative times use the browser's own wording for the current language.
 export function timeAgo(ts) {
-  const min = Math.round((Date.now() - ts) / 60_000);
-  if (min < 1) return 'just now';
-  if (min < 60) return `${min} min ago`;
-  const h = Math.round(min / 60);
-  return `${h} h ago`;
+  const rtf = new Intl.RelativeTimeFormat(locale(), { numeric: 'auto' });
+  const minutes = Math.round((ts - Date.now()) / 60_000);
+  if (minutes > -1) return rtf.format(0, 'minute');
+  if (minutes > -60) return rtf.format(minutes, 'minute');
+  return rtf.format(Math.round(minutes / 60), 'hour');
 }
 
 export function countdown(ms) {
@@ -64,8 +67,7 @@ export const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)'
 
 export const pause = (ms) => new Promise((r) => setTimeout(r, reducedMotion() ? 0 : ms));
 
-// Motion 1 of 3 (job accepted): the accepted row travels from its list position into the
-// "In progress" slot, so the picker sees where it went.
+// The accepted row travels from its place in the list into the "In progress" slot.
 export function flip(el, fromRect) {
   if (!el || !fromRect || reducedMotion()) return;
   const to = el.getBoundingClientRect();
@@ -78,7 +80,7 @@ export function flip(el, fromRect) {
   );
 }
 
-// Motion 3 of 3 (payout released): the amount counts up once.
+// The released payout counts up once.
 export function countUp(el, to, format) {
   if (!el) return;
   if (reducedMotion()) {
@@ -86,11 +88,10 @@ export function countUp(el, to, format) {
     return;
   }
   const start = performance.now();
-  const duration = 900;
   const step = (now) => {
-    const t = Math.min(1, (now - start) / duration);
-    el.textContent = format(Math.round(to * (1 - (1 - t) ** 3)));
-    if (t < 1) requestAnimationFrame(step);
+    const progress = Math.min(1, (now - start) / 900);
+    el.textContent = format(Math.round(to * (1 - (1 - progress) ** 3)));
+    if (progress < 1) requestAnimationFrame(step);
   };
   requestAnimationFrame(step);
 }

@@ -5,19 +5,23 @@
 import { verifyProof } from './ai.js';
 import { formatCode, srcToDataUrl } from './camera.js';
 import { CONFIG } from './config.js';
-import { GEO_ERROR_COPY, distanceM, formatDistance } from './geo.js';
+import { distanceM, formatDistance } from './geo.js';
+import { t } from './i18n.js';
 import { photoUrl } from './photos.js';
 import { codeExpired } from './store.js';
 import { clock } from './ui.js';
 
+// Order matters: the three device checks are instant and free, so they run before any AI call.
 export const CHECKS = [
-  { id: 'time', label: 'Taken after you accepted the job', ai: false },
-  { id: 'code', label: 'Job code still valid', ai: false },
-  { id: 'distance', label: `Within ${CONFIG.proofRadiusM} m of the reported spot`, ai: false },
-  { id: 'codeRead', label: 'Job code readable in the photo', ai: true },
-  { id: 'clean', label: 'Spot is cleared', ai: true },
-  { id: 'place', label: 'Same place as the report photo', ai: true },
+  { id: 'time', ai: false },
+  { id: 'code', ai: false },
+  { id: 'distance', ai: false },
+  { id: 'codeRead', ai: true },
+  { id: 'clean', ai: true },
+  { id: 'place', ai: true },
 ];
+
+export const checkLabel = (id) => (id === 'distance' ? t('check.distance', { m: CONFIG.proofRadiusM }) : t(`check.${id}`));
 
 function fail(results, id, detail, rejection) {
   results.push({ id, ok: false, detail });
@@ -28,50 +32,50 @@ const minutes = (ms) => Math.max(0, Math.round(ms / 60_000));
 
 export function localChecks(job, { capturedAt, fix }) {
   const results = [];
+  const photo = clock(capturedAt);
+  const accepted = clock(job.acceptedAt);
 
   if (capturedAt <= job.acceptedAt) {
-    return fail(results, 'time', `Photo ${clock(capturedAt)}, accepted ${clock(job.acceptedAt)}`, {
-      title: 'The photo is timestamped before you accepted the job',
-      body: `This photo is stamped ${clock(capturedAt)}, but you accepted the job at ${clock(job.acceptedAt)}. Proof has to be taken after accepting, so an older photo can't be reused.`,
-      fix: "Set your phone's date and time to automatic, then take the proof photo again.",
+    return fail(results, 'time', t('detail.timeFail', { photo, accepted }), {
+      title: t('reject.time.title'),
+      body: t('reject.time.body', { photo, accepted }),
+      fix: t('reject.time.fix'),
     });
   }
-  results.push({ id: 'time', ok: true, detail: `Accepted ${clock(job.acceptedAt)}, photo ${clock(capturedAt)}` });
+  results.push({ id: 'time', ok: true, detail: t('detail.time', { accepted, photo }) });
 
-  const age = capturedAt - job.proof.issuedAt;
+  const age = minutes(capturedAt - job.proof.issuedAt);
+  const code = formatCode(job.proof.code);
   if (codeExpired(job.proof, capturedAt)) {
-    return fail(results, 'code', `Issued ${minutes(age)} min before the photo`, {
-      title: 'The job code had expired',
-      body: `Code ${formatCode(job.proof.code)} was issued ${minutes(age)} minutes before this photo. Codes last ${CONFIG.codeTtlMin} minutes so nobody can prepare a photo in advance.`,
-      fix: "Take the proof photo again. You'll get a fresh code.",
+    return fail(results, 'code', t('detail.codeFail', { minutes: age }), {
+      title: t('reject.code.title'),
+      body: t('reject.code.body', { code, minutes: age, ttl: CONFIG.codeTtlMin }),
+      fix: t('reject.code.fix'),
     });
   }
-  results.push({ id: 'code', ok: true, detail: `${formatCode(job.proof.code)}, issued ${minutes(age)} min before the photo` });
+  results.push({ id: 'code', ok: true, detail: t('detail.code', { code, minutes: age }) });
 
-  const d = distanceM(job, fix);
-  if (d > CONFIG.proofRadiusM) {
-    const rough =
-      fix.accuracy > CONFIG.proofRadiusM
-        ? ` Your GPS reading is rough (±${fix.accuracy} m), so step into the open for a sharper fix first.`
-        : '';
-    return fail(results, 'distance', `${formatDistance(d)} from the spot`, {
-      title: 'Too far from the reported spot',
-      body: `This photo was taken ${formatDistance(d)} from where the waste was reported (GPS accuracy ±${fix.accuracy} m). Proof photos must be taken within ${CONFIG.proofRadiusM} m of the spot.`,
-      fix: `Walk back to the spot and take the proof photo again.${rough}`,
+  const distance = formatDistance(distanceM(job, fix));
+  if (distanceM(job, fix) > CONFIG.proofRadiusM) {
+    const rough = fix.accuracy > CONFIG.proofRadiusM ? t('reject.distance.rough', { accuracy: fix.accuracy }) : '';
+    return fail(results, 'distance', t('detail.distance', { distance, accuracy: fix.accuracy }), {
+      title: t('reject.distance.title'),
+      body: t('reject.distance.body', { distance, accuracy: fix.accuracy, limit: CONFIG.proofRadiusM }),
+      fix: t('reject.distance.fix') + rough,
     });
   }
-  results.push({ id: 'distance', ok: true, detail: `${formatDistance(d)} from the spot, GPS ±${fix.accuracy} m` });
+  results.push({ id: 'distance', ok: true, detail: t('detail.distance', { distance, accuracy: fix.accuracy }) });
 
   return { results, rejection: null };
 }
 
 export function noLocationRejection(kind) {
-  const copy = GEO_ERROR_COPY[kind] ?? GEO_ERROR_COPY.unavailable;
+  const key = ['insecure', 'unsupported', 'denied', 'unavailable', 'timeout'].includes(kind) ? kind : 'unavailable';
   return {
     check: 'distance',
-    title: copy.title,
-    body: `${copy.body} Without your location the proof can't be matched to the reported spot.`,
-    fix: copy.fix,
+    title: t(`geo.${key}.title`),
+    body: t('reject.noLocation.body', { body: t(`geo.${key}.body`) }),
+    fix: t(`geo.${key}.fix`),
   };
 }
 
@@ -87,36 +91,36 @@ export async function aiChecks(job, afterDataUrl) {
   const expected = formatCode(job.proof.code);
 
   if (!ai.code_matches) {
-    return fail(results, 'codeRead', ai.code_read ? `Read ${ai.code_read}` : 'No code found', {
-      title: "The job code isn't readable in the photo",
+    return fail(results, 'codeRead', ai.code_read ? t('detail.read', { code: ai.code_read }) : t('detail.noCode'), {
+      title: t('reject.codeRead.title'),
       body: ai.code_read
-        ? `We expected ${expected} but read ${ai.code_read}.`
-        : `We expected ${expected} but couldn't find a code in the photo.`,
-      fix: 'Hold the phone steady in good light and take the proof photo again.',
+        ? t('reject.codeRead.body', { expected, read: ai.code_read })
+        : t('reject.codeRead.bodyNone', { expected }),
+      fix: t('reject.codeRead.fix'),
     });
   }
-  results.push({ id: 'codeRead', ok: true, detail: `Read ${expected}` });
+  results.push({ id: 'codeRead', ok: true, detail: t('detail.read', { code: expected }) });
 
   if (!ai.site_clean) {
-    return fail(results, 'clean', ai.remaining_waste || 'Waste still visible', {
-      title: 'The spot still has waste in it',
-      body: `${ai.reasoning}${ai.remaining_waste ? ` Still visible: ${ai.remaining_waste}.` : ''}`,
-      fix: 'Finish clearing the spot, then take the proof photo again.',
+    return fail(results, 'clean', ai.remaining_waste || t('detail.stillWaste'), {
+      title: t('reject.clean.title'),
+      body: `${ai.reasoning}${ai.remaining_waste ? t('reject.clean.still', { waste: ai.remaining_waste }) : ''}`,
+      fix: t('reject.clean.fix'),
     });
   }
   results.push({ id: 'clean', ok: true, detail: ai.reasoning });
 
   if (!ai.same_place_likely) {
-    return fail(results, 'place', "Background doesn't match", {
-      title: "This doesn't look like the reported spot",
+    return fail(results, 'place', t('detail.notSamePlace'), {
+      title: t('reject.place.title'),
       body: ai.reasoning,
-      fix: 'Stand where the report photo was taken and frame the same wall, kerb or landmark, then take the proof photo again.',
+      fix: t('reject.place.fix'),
     });
   }
   results.push({
     id: 'place',
     ok: true,
-    detail: ai.same_place_checked ? 'Background matches the report photo' : 'Sample job: drawn placeholder, not compared',
+    detail: ai.same_place_checked ? t('detail.matches') : t('detail.notCompared'),
   });
 
   return { results, rejection: null };

@@ -29,6 +29,12 @@ function load() {
     const raw = localStorage.getItem(KEY);
     if (raw) {
       const saved = JSON.parse(raw);
+      // Sample jobs saved before their text was translatable: attach the key now.
+      for (const job of saved.jobs ?? []) {
+        if (job.sample && !job.analysis.reasoningKey) {
+          job.analysis.reasoningKey = SAMPLE_JOBS.find((s) => s.id === job.id)?.reasoningKey;
+        }
+      }
       return { ...blank(), ...saved, demo: { ...blank().demo, ...saved.demo } };
     }
   } catch {
@@ -127,7 +133,7 @@ export function ensureAnchor(point, source = 'gps') {
           wasteType: sample.wasteType,
           severity: sample.severity,
           itemsSeen: sample.itemsSeen,
-          reasoning: sample.reasoning,
+          reasoningKey: sample.reasoningKey,
           source: 'sample',
         },
         payout: estimatePayout(sample.wasteType, sample.severity),

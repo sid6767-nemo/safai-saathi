@@ -1,4 +1,5 @@
-import { initDemoControls } from './demo.js';
+import { initDemoControls, redrawDemoControls } from './demo.js';
+import { LANGUAGES, initialLanguage, loadLanguage } from './i18n.js';
 import { releaseDue } from './store.js';
 import * as home from './views/home.js';
 import * as job from './views/job.js';
@@ -39,7 +40,20 @@ function route() {
   location.replace('#/');
 }
 
+// Any language menu, on any screen, switches the whole app and redraws it.
+document.addEventListener('change', (e) => {
+  const select = e.target.closest('[data-lang]');
+  if (select && LANGUAGES.some((l) => l.code === select.value)) {
+    loadLanguage(select.value).then(() => {
+      redrawDemoControls();
+      route();
+    });
+  }
+});
+
 window.addEventListener('hashchange', route);
+
+await loadLanguage(initialLanguage());
 initDemoControls();
 route();
 

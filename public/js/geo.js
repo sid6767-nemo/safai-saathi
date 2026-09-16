@@ -7,34 +7,7 @@ export class GeoError extends Error {
   }
 }
 
-export const GEO_ERROR_COPY = {
-  insecure: {
-    title: 'Location needs a secure connection',
-    body: 'Browsers only share location with pages opened over https:// or from localhost.',
-    fix: 'Open the app from its https:// link and try again.',
-  },
-  unsupported: {
-    title: "This browser can't share location",
-    body: 'It has no Geolocation API.',
-    fix: 'Open the app in Chrome, Safari or Firefox.',
-  },
-  denied: {
-    title: 'Location access is blocked',
-    body: 'Safai Saathi needs your location to pin the spot so a picker can find it.',
-    fix: 'Allow location for this site from the icon in the address bar (on a phone: Settings, then your browser, then Location), then try again.',
-  },
-  unavailable: {
-    title: "We couldn't get a location fix",
-    body: 'The device has no GPS or network position right now.',
-    fix: 'Turn on location services, move away from thick walls, then try again.',
-  },
-  timeout: {
-    title: 'Location took too long',
-    body: 'No position arrived within 15 seconds.',
-    fix: 'Wait a few seconds with a clear view of the sky, then try again.',
-  },
-};
-
+// Copy for each kind lives in the language files as geo.<kind>.title / .body / .fix
 const OPTIONS = { enableHighAccuracy: true, maximumAge: 0, timeout: 15_000 };
 
 function toFix(position) {
@@ -108,6 +81,8 @@ export function formatDistance(m) {
   if (m < 1000) return `${Math.round(m)} m`;
   return `${(m / 1000).toFixed(m < 10_000 ? 1 : 0)} km`;
 }
+
+export const METRE_UNIT = 'm';
 
 export function formatCoords({ lat, lng }) {
   return `${lat.toFixed(5)}, ${lng.toFixed(5)}`;

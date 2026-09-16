@@ -1,20 +1,20 @@
 // Proof of completion: live camera only, a one-time job code on screen and burned into the photo,
 // GPS and time read at capture, then the checks in verify.js run one by one.
 
-import { CAMERA_ERROR_COPY, CameraError, canvasToBlob, formatCode, grabFrame, scaledDataUrl, stampPhoto, startCamera } from '../camera.js';
+import { CameraError, canvasToBlob, formatCode, grabFrame, scaledDataUrl, stampPhoto, startCamera } from '../camera.js';
 import { CONFIG } from '../config.js';
 import { demoBadge } from '../demo.js';
 import { formatCoords, getPosition, offsetM, watchPosition } from '../geo.js';
+import { t } from '../i18n.js';
 import { hydratePhotos, newPhotoId, putPhoto } from '../photos.js';
 import { activePicker, ensureCode, getState, markReview, markVerified, recordAttempt } from '../store.js';
 import { countdown, html, pause, render, stamp } from '../ui.js';
-import { CHECKS, aiChecks, localChecks, noLocationRejection } from '../verify.js';
+import { CHECKS, aiChecks, checkLabel, localChecks, noLocationRejection } from '../verify.js';
 
 const MARK = { pending: '', running: '', pass: '✓', fail: '✕', skipped: '–' };
-const STATE_WORD = { pending: 'waiting', running: 'checking', pass: 'passed', fail: 'failed', skipped: 'not checked' };
 
 export function mount(root, jobId) {
-  document.title = 'Proof photo – Safai Saathi';
+  document.title = `${t('proof.title')} – Safai Saathi`;
   const findJob = () => getState().jobs.find((j) => j.id === jobId);
   const first = findJob();
 
@@ -23,9 +23,9 @@ export function mount(root, jobId) {
     render(
       root,
       html`<main class="notice">
-        <h1>This job isn't in progress for you</h1>
-        <p>It may already be verified, or another picker accepted it.</p>
-        <a class="btn btn-primary btn-block" href="#/picker">Back to jobs</a>
+        <h1>${t('proof.notYours.title')}</h1>
+        <p>${t('proof.notYours.body')}</p>
+        <a class="btn btn-primary btn-block" href="#/picker">${t('nav.backToJobs')}</a>
       </main>`,
     );
     return;
@@ -36,12 +36,12 @@ export function mount(root, jobId) {
     root,
     html`<div class="cam cam-proof">
       <video class="cam-feed" playsinline muted aria-label="Live camera"></video>
-      <img class="cam-frozen" alt="Your proof photo" hidden />
+      <img class="cam-frozen" alt="" hidden />
       <div class="cam-top" data-slot="top"></div>
       <div class="code-plate" data-slot="code" aria-live="polite"></div>
       <figure class="ref-photo" data-slot="ref">
-        <img data-photo="${first.photo}" alt="The spot as it was reported" />
-        <figcaption>Report photo</figcaption>
+        <img data-photo="${first.photo}" alt="" />
+        <figcaption>${t('proof.reportPhoto')}</figcaption>
       </figure>
       <div class="cam-panel" data-slot="panel"></div>
     </div>`,
@@ -129,10 +129,13 @@ export function mount(root, jobId) {
     runChecks({ capturedAt, fix, blob: await canvasToBlob(canvas), dataUrl: scaledDataUrl(canvas, 1024) });
   }
 
-  // Motion 2 of 3 (proof verified): each check ticks as its result comes in.
+  // Each check ticks as its result comes in.
   async function tick(results) {
     for (const r of results) {
-      Object.assign(st.checks.find((c) => c.id === r.id), { state: r.ok ? 'pass' : 'fail', detail: r.detail });
+      Object.assign(
+        st.checks.find((c) => c.id === r.id),
+        { state: r.ok ? 'pass' : 'fail', detail: r.detail },
+      );
       draw();
       await pause(320);
     }
@@ -148,7 +151,7 @@ export function mount(root, jobId) {
     afterPhoto,
     proofCapturedAt: capture.capturedAt,
     proofFix: capture.fix,
-    proofChecks: st.checks.map(({ id, label, state, detail }) => ({ id, label, state, detail })),
+    proofChecks: st.checks.map(({ id, state, detail }) => ({ id, state, detail })),
   });
 
   async function runChecks(capture) {
@@ -169,7 +172,7 @@ export function mount(root, jobId) {
     } catch (err) {
       if (!alive) return;
       // Never auto-approve without the AI checks: a person decides instead.
-      for (const c of st.checks) if (c.ai) Object.assign(c, { state: 'skipped', detail: 'AI unavailable' });
+      for (const c of st.checks) if (c.ai) Object.assign(c, { state: 'skipped', detail: t('detail.aiUnavailable') });
       const afterPhoto = await saveAfterPhoto(capture);
       markReview(jobId, { ...proofRecord(capture, afterPhoto), reviewReason: err.message });
       location.hash = `#/job/${jobId}`;
@@ -194,11 +197,11 @@ export function mount(root, jobId) {
 
   function drawTop() {
     const live = ['starting', 'live'].includes(st.phase);
-    const gps = st.fix ? `GPS ±${st.fix.accuracy} m` : st.fixError ? 'No GPS yet' : 'Finding GPS';
+    const gps = st.fix ? t('report.gps', { m: st.fix.accuracy }) : st.fixError ? t('report.gpsNone') : t('report.gpsFinding');
     render(
       slot('top'),
-      html`<a class="cam-close" href="#/picker" aria-label="Close camera and go back to jobs">✕</a>
-        ${live ? html`<span class="chip mono" role="status">${gps}</span>` : ''}`,
+      html`<a class="cam-close" href="#/picker" aria-label="${t('proof.close')}">✕</a>
+        ${live ? html`<span class="chip chip-live mono" role="status">${gps}</span>` : ''}`,
     );
   }
 
@@ -212,9 +215,9 @@ export function mount(root, jobId) {
     const left = job.proof.issuedAt + CONFIG.codeTtlMin * 60_000 - Date.now();
     render(
       plate,
-      html`<span class="plate-label">Job code</span>
+      html`<span class="plate-label">${t('proof.jobCode')}</span>
         <span class="plate-code">${formatCode(job.proof.code)}</span>
-        <span class="plate-ttl">${left > 0 ? `Valid for ${countdown(left).slice(3)}` : 'Expired'}</span>`,
+        <span class="plate-ttl">${left > 0 ? t('proof.validFor', { time: countdown(left).slice(3) }) : t('proof.expired')}</span>`,
     );
   }
 
@@ -224,8 +227,8 @@ export function mount(root, jobId) {
         (c) => html`<li class="check is-${c.state}">
           <span class="check-mark" aria-hidden="true">${MARK[c.state]}</span>
           <span>
-            <span class="check-label">${c.label}</span>
-            <span class="visually-hidden">: ${STATE_WORD[c.state]}.</span>
+            <span class="check-label">${checkLabel(c.id)}</span>
+            <span class="visually-hidden">: ${t(`check.state.${c.state}`)}.</span>
             ${c.detail ? html`<span class="check-detail">${c.detail}</span>` : ''}
           </span>
         </li>`,
@@ -235,33 +238,33 @@ export function mount(root, jobId) {
   function panelFor() {
     switch (st.phase) {
       case 'starting':
-        return html`<button class="shutter" disabled>Starting camera</button>`;
+        return html`<button class="shutter" disabled>${t('report.starting')}</button>`;
       case 'live':
         return html`${demoBadge()}
-          <p class="cam-hint">Show the cleared spot from where the report photo was taken. The job code is stamped onto your photo.</p>
-          <button class="shutter" data-act="shoot" data-key="shoot">Take proof photo</button>`;
-      case 'camera-error': {
-        const copy = CAMERA_ERROR_COPY[st.cameraError];
+          <p class="cam-hint">${t('proof.hint')}</p>
+          <button class="shutter" data-act="shoot" data-key="shoot">${t('proof.take')}</button>`;
+      case 'camera-error':
         return html`<div class="sheet sheet-dark" role="alert">
-          <h2 class="sheet-title">${copy.title}</h2>
-          <p>${copy.body}</p>
-          <p class="fix"><strong>What to do:</strong> ${copy.fix}</p>
+          <h2 class="sheet-title">${t(`cam.${st.cameraError}.title`)}</h2>
+          <p>${t(`cam.${st.cameraError}.body`)}</p>
+          <p class="fix"><strong>${t('action.whatToDo')}</strong> ${t(`cam.${st.cameraError}.fix`)}</p>
           <div class="sheet-actions">
-            <button class="btn btn-primary btn-block" data-act="retake">Try again</button>
-            <a class="btn btn-quiet btn-block" href="#/picker">Back to jobs</a>
+            <button class="btn btn-primary btn-block" data-act="retake">${t('action.tryAgain')}</button>
+            <a class="btn btn-quiet btn-block" href="#/picker">${t('nav.backToJobs')}</a>
           </div>
         </div>`;
-      }
       case 'locating':
-        return html`<div class="sheet sheet-dark sheet-busy" role="status"><span class="spinner" aria-hidden="true"></span>Reading your location</div>`;
+        return html`<div class="sheet sheet-dark sheet-busy" role="status">
+          <span class="spinner" aria-hidden="true"></span>${t('report.locating')}
+        </div>`;
       case 'checking':
         return html`<div class="sheet sheet-dark">
-          <h2 class="sheet-title">Checking your proof</h2>
+          <h2 class="sheet-title">${t('proof.checking')}</h2>
           ${checklist()}
         </div>`;
       case 'passed':
         return html`<div class="sheet sheet-dark" role="status">
-          <h2 class="sheet-title">Cleanup verified</h2>
+          <h2 class="sheet-title sheet-pass">${t('proof.verified')}</h2>
           ${checklist()}
         </div>`;
       case 'rejected': {
@@ -269,14 +272,14 @@ export function mount(root, jobId) {
         return html`<div class="sheet sheet-dark">
           ${st.checks.length ? checklist() : ''}
           <div class="reject" role="alert">
-            <p class="reject-kicker">Proof rejected</p>
+            <p class="reject-kicker">${t('proof.rejected')}</p>
             <h2 class="sheet-title">${r.title}</h2>
             <p>${r.body}</p>
-            <p class="fix"><strong>What to do:</strong> ${r.fix}</p>
+            <p class="fix"><strong>${t('action.whatToDo')}</strong> ${r.fix}</p>
           </div>
           <div class="sheet-actions">
-            <button class="btn btn-primary btn-block" data-act="retake">Take proof photo</button>
-            <a class="btn btn-quiet btn-block" href="#/picker">Back to jobs</a>
+            <button class="btn btn-primary btn-block" data-act="retake">${t('proof.take')}</button>
+            <a class="btn btn-quiet btn-block" href="#/picker">${t('nav.backToJobs')}</a>
           </div>
         </div>`;
       }

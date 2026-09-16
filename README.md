@@ -37,6 +37,7 @@ Works best on a phone, or a laptop browser narrowed to phone width. The camera n
 
 | Real in this prototype | Simulated |
 |---|---|
+| Four languages with a live switcher; the AI replies in the chosen one | The Hindi, Tamil and Kannada wording is machine-translated and unchecked |
 | Live camera capture through `getUserMedia`; no file or gallery input exists anywhere (`npm run check` fails the build if one appears) | The 9 waste pickers: fixed positions placed around the first location the app reads |
 | GPS through the Geolocation API, read at the moment of capture | Notifications: "sent to N pickers" is a distance count, not a push message or SMS |
 | AI vision analysis of the report photo (Gemini or Claude), returned as schema-checked JSON | Payments: no money moves; "ward cleanup fund" is a label |
@@ -155,14 +156,33 @@ The two flows are meant to feel like two different products for two different pe
   in hand pinned below, and open jobs as dense rows ranked by distance. No map: on foot, "how far"
   and "how much" decide it.
 
-Colours come from Indian street infrastructure rather than eco branding: asphalt `#15171A`, kerb
-concrete `#E4E6E1`, auto-rickshaw yellow `#FFC20E`, and the Swachh Bharat segregation-bin colours,
-dry blue `#1E5BC6` and wet green `#1B7A43` (the only green in the app, so it always means wet
-waste), plus signal red `#D12A25` for rejections. Type: [Anek](https://fonts.google.com/specimen/Anek+Latin)
-and [Mukta](https://fonts.google.com/specimen/Mukta) from the Indian foundry Ek Type, with IBM Plex
-Mono for evidence (codes, coordinates, timestamps). Motion is used only to confirm something
-happened: a job accepted, a check passing, a payout released. All of it switches off under
-`prefers-reduced-motion`.
+Colours come from Indian street and festival colour rather than eco branding: asphalt `#14161A`,
+kerb concrete `#E2E5E0`, auto-rickshaw yellow `#FFC20E` for actions, marigold `#FF7A1A` for the job
+in hand, kumkum pink `#E8336D` for rewards, and the Swachh Bharat segregation-bin colours, dry blue
+`#1E5BC6` and wet green `#1B7A43` (the only green in the app, so it always means wet waste), plus
+signal red `#D12A25` for rejections. Buttons are slabs with a hard offset shadow, like painted
+signage, and they move when pressed.
+
+Type: [Bricolage Grotesque](https://fonts.google.com/specimen/Bricolage+Grotesque) for Latin
+headings, with [Anek](https://fonts.google.com/specimen/Anek+Devanagari) Devanagari, Tamil and
+Kannada so every language shares one voice; [Mukta](https://fonts.google.com/specimen/Mukta),
+Mukta Malar and Baloo Tamma 2 for body text; IBM Plex Mono for evidence (codes, coordinates,
+timestamps). Motion confirms that something happened: a screen arriving, a job accepted, each check
+passing or failing, a payout counting up. All of it switches off under `prefers-reduced-motion`.
+
+## Languages
+
+The app runs in **English, हिंदी, தமிழ் and ಕನ್ನಡ**, switched from the menu on the home screen or
+the dashboard header, and remembered in the browser. The choice is also sent to the AI, so its
+one-line reasoning comes back in the same language.
+
+Strings live in [`public/js/i18n/`](public/js/i18n/), one file per language with identical keys.
+`npm run check` fails if a language is missing a key or its placeholders don't match English, and
+English is the fallback at runtime for anything still missing.
+
+> **The Hindi, Tamil and Kannada translations were written by an AI and have not been checked by a
+> native speaker.** Get someone who speaks the language to read them before the pitch; each file
+> says so at the top.
 
 ## Swapping the sample jobs for real ones
 
@@ -185,6 +205,8 @@ public/
   css/                tokens, base, reporter side, picker side
   js/
     config.js         every tunable number (rates, radii, TTLs, hold window)
+    i18n.js           language loading, switching and t()
+    i18n/             en, hi, ta, kn string files (identical keys)
     store.js          job state machine, persistence, cross-tab sync
     camera.js         live capture and the evidence stamp
     geo.js            GPS reads and distance maths

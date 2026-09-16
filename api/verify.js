@@ -6,7 +6,7 @@
 // the server compares. That way the model can't be nudged into "seeing" the right answer.
 
 import { z } from 'zod';
-import { HttpError, askForJson, imageBlock, jsonRoute } from './_lib/ai.js';
+import { HttpError, askForJson, imageBlock, jsonRoute, languageInstruction } from './_lib/ai.js';
 
 const Verification = z.object({
   code_read: z.string(),
@@ -33,13 +33,14 @@ reasoning: one plain sentence of at most 30 words, written for the picker, expla
 const ILLUSTRATION_NOTE =
   'Note: the BEFORE image is a drawn illustration standing in for a sample job, not a real photo. Set same_place_likely to true and judge site_clean from the AFTER photo alone.';
 
-export default jsonRoute(async ({ before, after, code, beforeIsIllustration }) => {
+export default jsonRoute(async ({ before, after, code, beforeIsIllustration, language }) => {
   if (typeof code !== 'string' || !/^[A-Z0-9]{6}$/.test(code)) {
     throw new HttpError(400, 'bad_code', 'The job code sent for checking was malformed.');
   }
 
   const result = await askForJson({
-    system: SYSTEM,
+    // code_read must stay exactly as printed, so the language note excludes it by naming the rest.
+    system: SYSTEM + languageInstruction(language),
     schema: Verification,
     content: [
       { type: 'text', text: 'BEFORE photo:' },

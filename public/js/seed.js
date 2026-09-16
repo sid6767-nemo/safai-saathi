@@ -1,5 +1,5 @@
 // Sample jobs so the picker dashboard isn't empty on the first take. Each one is tagged
-// "Sample" in the UI.
+// "Sample" in the UI, and its description is translated (key `seed.<id>` in the language files).
 //
 // To swap in real photos: put a JPEG in public/assets/samples/, point `photo` at it, set
 // `illustration: false` (so verification also checks the proof photo is the same place),
@@ -15,7 +15,7 @@ export const SAMPLE_JOBS = [
     east: -240,
     minutesAgo: 18,
     itemsSeen: ['plastic bottles', 'chip packets', 'paper cups'],
-    reasoning: 'Mostly plastic bottles and wrappers spread along a painted kerb, a few bags of work.',
+    reasoningKey: 'seed.smp1',
   },
   {
     id: 'SS-SMP2',
@@ -27,7 +27,7 @@ export const SAMPLE_JOBS = [
     east: 420,
     minutesAgo: 41,
     itemsSeen: ['vegetable peels', 'banana leaves', 'food scraps'],
-    reasoning: 'A heap of vegetable and food waste against a wall, large enough to need a cart.',
+    reasoningKey: 'seed.smp2',
   },
   {
     id: 'SS-SMP3',
@@ -39,6 +39,6 @@ export const SAMPLE_JOBS = [
     east: 610,
     minutesAgo: 6,
     itemsSeen: ['tea cups', 'paper plates'],
-    reasoning: 'A handful of paper tea cups and plates by a lamp post, one bag clears it.',
+    reasoningKey: 'seed.smp3',
   },
 ];

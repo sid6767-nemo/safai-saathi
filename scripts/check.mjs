@@ -1,10 +1,10 @@
-// Guard for the anti-fraud rule: no photo may ever come from the gallery or a file.
-// Fails if anything in public/ offers a file picker, drag-and-drop, or a capture-attribute input.
-// Usage: npm run check
+// Two guards, run with `npm run check`:
+//   1. the anti-fraud rule: no photo may ever come from the gallery or a file;
+//   2. every language file carries the same keys, with the same placeholders, as English.
 
 import { readdir, readFile } from 'node:fs/promises';
 import { dirname, join, relative } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -41,3 +41,35 @@ if (problems) {
   process.exit(1);
 }
 console.log('OK: photos can only come from the live camera.');
+
+// Language files: same keys, same placeholders.
+const load = async (code) =>
+  (await import(pathToFileURL(join(root, 'public/js/i18n', `${code}.js`)).href)).strings;
+const placeholders = (text) => [...text.matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort().join(',');
+
+const en = await load('en');
+let langProblems = 0;
+for (const code of ['hi', 'ta', 'kn']) {
+  const strings = await load(code);
+  for (const key of Object.keys(en)) {
+    if (!(key in strings)) {
+      console.error(`${code}.js  missing key: ${key}`);
+      langProblems++;
+    } else if (placeholders(en[key]) !== placeholders(strings[key])) {
+      console.error(`${code}.js  placeholders differ: ${key}`);
+      langProblems++;
+    }
+  }
+  for (const key of Object.keys(strings)) {
+    if (!(key in en)) {
+      console.error(`${code}.js  key not in en.js: ${key}`);
+      langProblems++;
+    }
+  }
+}
+
+if (langProblems) {
+  console.error(`\n${langProblems} translation problem(s).`);
+  process.exit(1);
+}
+console.log(`OK: hi, ta and kn match en.js (${Object.keys(en).length} keys each).`);

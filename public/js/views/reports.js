@@ -1,31 +1,35 @@
 // Reporter's list: what happened to each spot, rewards, and "Flag as still dirty" during the hold.
 
 import { CONFIG } from '../config.js';
-import { SIZE_LABEL, WASTE_LABEL, rupees } from '../payout.js';
+import { t, tn } from '../i18n.js';
+import { rupees, sizeLabel, wasteLabel } from '../payout.js';
 import { hydratePhotos } from '../photos.js';
 import { JobError, flagJob, getState, pickerName, subscribe } from '../store.js';
 import { clock, countdown, html, render, timeAgo, toast } from '../ui.js';
 
 export function mount(root) {
-  document.title = 'My reports – Safai Saathi';
+  document.title = `${t('reports.title')} – Safai Saathi`;
   let confirming = null;
 
   function statusLine(s, job) {
-    const who = pickerName(s, job.acceptedBy);
+    const name = pickerName(s, job.acceptedBy);
     switch (job.status) {
       case 'open':
-        return html`Waiting for a picker. Sent to ${job.notified} ${job.notified === 1 ? 'picker' : 'pickers'} within 2 km.`;
+        return tn('reports.status.open', job.notified);
       case 'accepted':
-        return html`${who} accepted it at ${clock(job.acceptedAt)} and is on the way.`;
+        return t('reports.status.accepted', { name, time: clock(job.acceptedAt) });
       case 'review':
-        return html`${who} sent a cleanup photo. A ward officer is reviewing it.`;
+        return t('reports.status.review', { name });
       case 'verified_hold':
-        return html`Cleaned by ${who}, verified at ${clock(job.verifiedAt)}. Payout releases in
-          <span class="mono" data-release="${job.releaseAt}">${countdown(job.releaseAt - Date.now())}</span>.`;
+        return html`${t('reports.status.hold', {
+          name,
+          time: clock(job.verifiedAt),
+          countdown: '',
+        })}<span class="mono" data-release="${job.releaseAt}">${countdown(job.releaseAt - Date.now())}</span>`;
       case 'disputed':
-        return html`You flagged this as still dirty. The payout is paused while a ward officer checks it.`;
+        return t('reports.status.disputed');
       case 'released':
-        return html`Cleaned and paid. You earned ${rupees(job.payout.reporter)}.`;
+        return t('reports.status.released', { amount: rupees(job.payout.reporter) });
       default:
         return '';
     }
@@ -35,13 +39,15 @@ export function mount(root) {
     if (job.status !== 'verified_hold') return '';
     if (confirming !== job.id) {
       return html`<button class="btn btn-danger btn-small" data-act="flag" data-id="${job.id}" data-key="flag-${job.id}">
-        Flag as still dirty
+        ${t('reports.flag')}
       </button>`;
     }
-    return html`<div class="flag-box" role="group" aria-label="Confirm flag">
-      <p>The picker's ${rupees(job.payout.picker)} payout pauses while a ward officer re-checks the spot.</p>
-      <button class="btn btn-danger" data-act="flag-confirm" data-id="${job.id}" data-key="confirm-${job.id}">Flag as still dirty</button>
-      <button class="btn btn-quiet" data-act="flag-cancel">Cancel</button>
+    return html`<div class="flag-box" role="group">
+      <p>${t('reports.flagNote', { amount: rupees(job.payout.picker) })}</p>
+      <button class="btn btn-danger" data-act="flag-confirm" data-id="${job.id}" data-key="confirm-${job.id}">
+        ${t('reports.flag')}
+      </button>
+      <button class="btn btn-quiet" data-act="flag-cancel">${t('action.cancel')}</button>
     </div>`;
   }
 
@@ -57,28 +63,31 @@ export function mount(root) {
       root,
       html`<main class="reports">
         <header class="page-head">
-          <a class="btn btn-quiet" href="#/">Home</a>
-          <h1>My reports</h1>
+          <a class="btn btn-quiet" href="#/">${t('nav.home')}</a>
+          <h1>${t('reports.title')}</h1>
         </header>
-        <section class="reward-strip" aria-label="Your rewards">
-          <span>Rewards earned</span>
+        <section class="reward-strip" aria-label="${t('reports.rewards')}">
+          <span>${t('reports.rewards')}</span>
           <strong>${rupees(earned)}</strong>
-          ${pending ? html`<span class="reward-pending">${rupees(pending)} still to come</span>` : ''}
+          ${pending ? html`<span class="reward-pending">${t('reports.pending', { amount: rupees(pending) })}</span>` : ''}
         </section>
         ${mine.length
           ? html`<ol class="report-list">
               ${mine.map(
                 (job) => html`<li class="report-row">
                   <div class="report-photos">
-                    <figure><img data-photo="${job.photo}" alt="Reported spot ${job.id}" /><figcaption>Before</figcaption></figure>
+                    <figure><img data-photo="${job.photo}" alt="" /><figcaption>${t('reports.before')}</figcaption></figure>
                     ${job.afterPhoto
-                      ? html`<figure><img data-photo="${job.afterPhoto}" alt="After cleanup" /><figcaption>After</figcaption></figure>`
+                      ? html`<figure>
+                          <img data-photo="${job.afterPhoto}" alt="" />
+                          <figcaption>${t('reports.after')}</figcaption>
+                        </figure>`
                       : ''}
                   </div>
                   <div class="report-body">
                     <div class="tags">
-                      <span class="tag tag-${job.analysis.wasteType}">${WASTE_LABEL[job.analysis.wasteType]}</span>
-                      <span class="tag tag-outline">${SIZE_LABEL[job.analysis.severity]}</span>
+                      <span class="tag tag-${job.analysis.wasteType}">${wasteLabel(job.analysis.wasteType)}</span>
+                      <span class="tag tag-outline">${sizeLabel(job.analysis.severity)}</span>
                     </div>
                     <p class="report-status status-${job.status}">${statusLine(s, job)}</p>
                     <p class="job-meta"><span class="mono">${job.id}</span><span>${timeAgo(job.createdAt)}</span></p>
@@ -87,11 +96,8 @@ export function mount(root) {
                 </li>`,
               )}
             </ol>`
-          : html`<p class="empty-light">
-              No reports yet. Each spot you report earns you ${Math.round(CONFIG.reporterShare * 100)}% of the
-              picker's payout once it's verified clean.
-            </p>`}
-        <a class="btn btn-primary btn-block" href="#/report">Report waste</a>
+          : html`<p class="empty-light">${t('reports.empty', { share: Math.round(CONFIG.reporterShare * 100) })}</p>`}
+        <a class="btn btn-primary btn-block" href="#/report">${t('home.report')}</a>
       </main>`,
     );
     hydratePhotos(root);
@@ -106,9 +112,9 @@ export function mount(root) {
       confirming = null;
       try {
         flagJob(el.dataset.id);
-        toast('Flagged. The payout is paused until a ward officer checks the spot.');
+        toast(t('reports.flagged'));
       } catch (err) {
-        toast(err instanceof JobError ? err.message : 'Could not flag this cleanup.');
+        toast(err instanceof JobError ? t('reports.flagLate') : err.message);
       }
     }
     draw();

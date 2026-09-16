@@ -8,39 +8,7 @@ export class CameraError extends Error {
   }
 }
 
-export const CAMERA_ERROR_COPY = {
-  insecure: {
-    title: 'The camera needs a secure connection',
-    body: 'Browsers only open the camera on pages served over https:// or from localhost.',
-    fix: 'Open the app from its https:// link and try again.',
-  },
-  unsupported: {
-    title: "This browser can't open the camera",
-    body: 'It has no live camera API.',
-    fix: 'Open the app in an up-to-date Chrome, Safari or Firefox.',
-  },
-  denied: {
-    title: 'Camera access is blocked',
-    body: 'Photos have to be taken live in the app, so it needs the camera. Gallery uploads are not allowed.',
-    fix: 'Allow the camera for this site from the icon in the address bar (on a phone: Settings, then your browser, then Camera), then try again.',
-  },
-  notfound: {
-    title: 'No camera found',
-    body: "This device doesn't have a camera the browser can use.",
-    fix: 'Connect or enable a camera, or open the app on a phone.',
-  },
-  inuse: {
-    title: 'The camera is busy',
-    body: 'Another app or browser tab is using it.',
-    fix: 'Close video calls or other camera apps, then try again.',
-  },
-  unknown: {
-    title: "The camera didn't start",
-    body: 'The browser reported an unexpected error.',
-    fix: 'Reload the page and try again.',
-  },
-};
-
+// Copy for each kind lives in the language files as cam.<kind>.title / .body / .fix
 const ERROR_KINDS = {
   NotAllowedError: 'denied',
   SecurityError: 'denied',

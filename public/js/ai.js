@@ -1,5 +1,6 @@
-// Browser side of the two AI routes. The API key stays on the server (api/_lib/claude.js).
+// Browser side of the two AI routes. The API key stays on the server (api/_lib/ai.js).
 
+import { languageInfo, t } from './i18n.js';
 import { getState } from './store.js';
 
 export class AiError extends Error {
@@ -11,7 +12,7 @@ export class AiError extends Error {
 
 async function post(path, body) {
   if (getState().demo.aiOffline) {
-    throw new AiError('offline', 'AI offline mode is switched on in Demo controls.');
+    throw new AiError('offline', t('demo.ai'));
   }
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 50_000);
@@ -20,7 +21,8 @@ async function post(path, body) {
     res = await fetch(path, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
+      // The AI answers in the language on screen.
+      body: JSON.stringify({ ...body, language: languageInfo().english }),
       signal: controller.signal,
     });
   } catch (err) {

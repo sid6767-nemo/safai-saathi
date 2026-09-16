@@ -19,7 +19,7 @@ body {
   color: var(--ink);
   font-family: var(--font-body);
   font-size: 17px;
-  line-height: 1.45;
+  line-height: 1.5;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -31,6 +31,14 @@ body {
   overflow-x: hidden;
   background: var(--concrete);
   color: var(--ink);
+  animation: screen-in 240ms var(--ease-out) both;
+}
+
+@keyframes screen-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
 }
 
 .app.is-dark {
@@ -53,9 +61,9 @@ h2,
 h3 {
   margin: 0;
   font-family: var(--font-display);
-  font-weight: 700;
-  font-stretch: 85%;
-  line-height: 1.08;
+  font-weight: 800;
+  line-height: var(--display-line, 1.05);
+  letter-spacing: -0.01em;
 }
 
 p {
@@ -85,61 +93,97 @@ input {
   outline-color: var(--yellow);
 }
 
-/* Buttons */
+/* Buttons: painted-sign slabs with a hard offset shadow that collapses when pressed. */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 52px;
+  min-height: 54px;
   padding: 0 20px;
-  border: 2px solid transparent;
+  border: 2px solid var(--ink);
   border-radius: var(--radius);
-  background: none;
-  color: inherit;
+  background: var(--concrete-2);
+  color: var(--ink);
   font-family: var(--font-display);
   font-size: 20px;
-  font-weight: 650;
-  font-stretch: 88%;
+  font-weight: 700;
   text-align: center;
   text-decoration: none;
   cursor: pointer;
   touch-action: manipulation;
+  box-shadow: var(--press-shadow);
+  transition: transform 90ms var(--ease-out), box-shadow 90ms var(--ease-out), background-color 120ms linear;
+}
+
+.btn:active {
+  transform: translate(3px, 3px);
+  box-shadow: 1px 1px 0 var(--ink);
 }
 
 .btn-primary {
   background: var(--yellow);
-  border-color: var(--yellow);
   color: var(--ink);
 }
 
 .btn-primary:hover {
   background: var(--yellow-press);
-  border-color: var(--yellow-press);
+}
+
+.is-dark .btn,
+.is-camera .btn,
+.demo .btn {
+  border-color: #000;
+  box-shadow: var(--press-shadow-dark);
+}
+
+.is-dark .btn:active,
+.is-camera .btn:active,
+.demo .btn:active {
+  box-shadow: 1px 1px 0 #000;
 }
 
 .btn-outline {
+  background: transparent;
+  color: inherit;
   border-color: currentColor;
+  box-shadow: none;
+}
+
+.btn-outline:active {
+  box-shadow: none;
 }
 
 .btn-quiet {
   min-height: 44px;
   padding: 0 8px;
+  border-color: transparent;
+  background: none;
+  color: inherit;
+  box-shadow: none;
   font-family: var(--font-body);
   font-size: 16px;
-  font-weight: 500;
+  font-weight: 600;
   text-decoration: underline;
-  text-underline-offset: 3px;
+  text-underline-offset: 4px;
+}
+
+.btn-quiet:active {
+  transform: none;
+  box-shadow: none;
 }
 
 .btn-danger {
+  background: transparent;
   border-color: var(--red);
   color: var(--red);
+  box-shadow: none;
 }
 
 .is-dark .btn-danger,
 .demo .btn-danger {
   border-color: var(--red-on-dark);
   color: var(--red-on-dark);
+  box-shadow: none;
 }
 
 .btn-small {
@@ -149,7 +193,8 @@ input {
 }
 
 .btn[disabled] {
-  opacity: 0.4;
+  opacity: 0.45;
+  box-shadow: none;
   cursor: not-allowed;
 }
 
@@ -159,8 +204,19 @@ input {
 }
 
 .btn-xl {
-  min-height: 66px;
-  font-size: 25px;
+  min-height: 68px;
+  font-size: 26px;
+}
+
+/* One line of plain guidance under a main action. */
+.btn-help {
+  margin-top: 6px;
+  color: var(--ink-2);
+  font-size: 14.5px;
+}
+
+.is-dark .btn-help {
+  color: var(--on-dark-2);
 }
 
 .link {
@@ -170,8 +226,37 @@ input {
   color: inherit;
   font: inherit;
   text-decoration: underline;
-  text-underline-offset: 3px;
+  text-underline-offset: 4px;
   cursor: pointer;
+}
+
+/* Language menu */
+.lang {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px 2px 10px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+}
+
+.lang select {
+  min-height: 36px;
+  padding: 0 4px;
+  border: 0;
+  background: none;
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.lang-dark {
+  border-color: var(--line-dark);
+  color: var(--on-dark);
+}
+
+.lang-dark select {
+  color: var(--on-dark);
 }
 
 /* Tags: filled for waste type, outlined for size, dashed for sample data */
@@ -184,14 +269,13 @@ input {
 .tag {
   display: inline-flex;
   align-items: center;
-  height: 26px;
-  padding: 0 8px;
+  min-height: 26px;
+  padding: 2px 9px;
   border-radius: 4px;
   font-family: var(--font-display);
   font-size: 15px;
-  font-weight: 600;
-  font-stretch: 90%;
-  line-height: 1;
+  font-weight: 700;
+  line-height: 1.15;
   white-space: nowrap;
 }
 
@@ -206,24 +290,56 @@ input {
 }
 
 .tag-outline {
-  border: 1.5px solid currentColor;
+  border: 2px solid currentColor;
 }
 
 .tag-sample {
-  border: 1.5px dashed currentColor;
+  border: 2px dashed currentColor;
 }
 
 .tag-new {
-  background: var(--yellow);
-  color: var(--ink);
+  background: var(--marigold);
+  color: #fff;
 }
 
 .chip {
   padding: 5px 9px;
   border-radius: 4px;
-  background: rgba(21, 23, 26, 0.8);
+  background: rgba(20, 22, 26, 0.82);
   color: var(--on-dark);
   font-size: 13px;
+}
+
+/* A live dot, so it reads as a running camera rather than a still. */
+.chip-live::before {
+  content: '';
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: var(--red-on-dark);
+  animation: live-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes live-pulse {
+  50% {
+    opacity: 0.25;
+  }
+}
+
+.chip-spacer {
+  width: 44px;
+}
+
+.step-chip {
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: var(--yellow);
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
 }
 
 .demo-badge {
@@ -252,11 +368,19 @@ input {
   max-width: min(92vw, 400px);
   padding: 12px 16px;
   transform: translateX(-50%);
-  border: 1px solid var(--line-dark);
+  border: 2px solid var(--yellow);
   border-radius: var(--radius);
   background: var(--asphalt);
   color: var(--on-dark);
   font-size: 16px;
+  animation: toast-in 220ms var(--ease-pop) both;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 10px);
+  }
 }
 
 .spinner {
@@ -289,14 +413,14 @@ input {
 dialog.demo {
   width: min(92vw, 400px);
   padding: 0;
-  border: 1px solid var(--line-dark);
-  border-radius: 10px;
+  border: 2px solid var(--line-dark);
+  border-radius: 12px;
   background: var(--asphalt-2);
   color: var(--on-dark);
 }
 
 dialog.demo::backdrop {
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.65);
 }
 
 .demo-inner {

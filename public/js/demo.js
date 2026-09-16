@@ -2,15 +2,16 @@
 // can't walk 150 m away. Open with the gear button or Shift+D.
 
 import { CONFIG } from './config.js';
+import { t } from './i18n.js';
 import { expireCodes, getState, resetAll, setDemo, skipHolds, subscribe } from './store.js';
 import { html, render, toast } from './ui.js';
 
 let dialog;
 
 const OVERRIDES = [
-  ['spoofLocation', `Pretend I'm ${CONFIG.demo.spoofDistanceM} m from the spot`, 'location moved'],
-  ['clockSkew', `Pretend my clock is ${CONFIG.demo.clockSkewMin / 60} hour behind`, 'clock behind'],
-  ['aiOffline', 'AI offline mode', 'AI offline'],
+  ['spoofLocation', () => t('demo.spoof', { m: CONFIG.demo.spoofDistanceM }), 'demo.badge.location'],
+  ['clockSkew', () => t('demo.clock', { hours: CONFIG.demo.clockSkewMin / 60 }), 'demo.badge.clock'],
+  ['aiOffline', () => t('demo.ai'), 'demo.badge.ai'],
 ];
 
 function draw() {
@@ -18,23 +19,25 @@ function draw() {
   render(
     dialog,
     html`<form method="dialog" class="demo-inner">
-      <h2 id="demo-title">Demo controls</h2>
-      <p class="demo-lede">Simulation only. These stage the conditions the fraud checks look for, so they can be tested without leaving the room.</p>
+      <h2 id="demo-title">${t('demo.title')}</h2>
+      <p class="demo-lede">${t('demo.lede')}</p>
       <fieldset class="demo-group">
-        <legend>Proof photo and AI</legend>
+        <legend>${t('demo.group')}</legend>
         ${OVERRIDES.map(
           ([name, label]) => html`<label class="switch">
             <input type="checkbox" name="${name}" data-key="${name}" ${demo[name] ? html`checked` : ''} />
-            <span>${label}</span>
+            <span>${label()}</span>
           </label>`,
         )}
       </fieldset>
       <div class="demo-actions">
-        <button type="button" class="btn btn-outline" data-demo="expire" data-key="expire">Expire job codes now</button>
-        <button type="button" class="btn btn-outline" data-demo="skip" data-key="skip">Skip the 24-hour hold</button>
-        <button type="button" class="btn btn-danger" data-demo="reset" data-key="reset">Reset demo data</button>
+        <button type="button" class="btn btn-outline" data-demo="expire" data-key="expire">${t('demo.expire')}</button>
+        <button type="button" class="btn btn-outline" data-demo="skip" data-key="skip">
+          ${t('demo.skip', { hours: CONFIG.holdHours })}
+        </button>
+        <button type="button" class="btn btn-danger" data-demo="reset" data-key="reset">${t('demo.reset')}</button>
       </div>
-      <button class="btn btn-primary btn-block" value="close">Close</button>
+      <button class="btn btn-primary btn-block" value="close">${t('demo.close')}</button>
     </form>`,
   );
 }
@@ -59,11 +62,11 @@ export function initDemoControls() {
     const action = e.target.closest('[data-demo]')?.dataset.demo;
     if (action === 'expire') {
       expireCodes();
-      toast('Every issued job code is now expired.');
+      toast(t('demo.expired'));
     } else if (action === 'skip') {
       skipHolds();
-      toast('Holds skipped. Verified payouts release now.');
-    } else if (action === 'reset' && confirm('Erase every report, job and photo in this browser?')) {
+      toast(t('demo.skipped'));
+    } else if (action === 'reset' && confirm(t('demo.resetConfirm'))) {
       await resetAll();
       dialog.close();
       location.hash = '#/';
@@ -83,7 +86,10 @@ export function initDemoControls() {
 
 // A visible strip whenever a staged condition is on, so a video never passes one off as real.
 export function demoBadge() {
-  const on = OVERRIDES.filter(([name]) => getState().demo[name]).map(([, , short]) => short);
+  const on = OVERRIDES.filter(([name]) => getState().demo[name]).map(([, , badge]) => t(badge));
   if (!on.length) return '';
-  return html`<p class="demo-badge" role="status">Demo override on: ${on.join(', ')}</p>`;
+  return html`<p class="demo-badge" role="status">${t('demo.badge', { list: on.join(', ') })}</p>`;
 }
+
+// Redraw the dialog when the language changes.
+export { draw as redrawDemoControls };

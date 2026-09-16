@@ -1,58 +1,71 @@
-/* Picker side: a work tool. Asphalt ground, dense hairline rows, earnings in yellow. */
+/* Picker side: a work tool. Asphalt ground, dense hairline rows, earnings in yellow,
+   marigold for the job in hand. */
 
 .console {
   min-height: 100dvh;
   padding-bottom: 32px;
 }
 
+/* One row on a 375px phone: wordmark, language, picker, gear. Everything here is sized to fit. */
 .console-head {
   position: sticky;
   top: 0;
   z-index: 5;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px 14px;
+  gap: 6px;
+  padding: 8px 10px;
   border-bottom: 1px solid var(--line-dark);
   background: var(--asphalt);
 }
 
 .wm-small {
+  flex: none;
   color: var(--yellow);
   font-family: var(--font-deva);
-  font-size: 19px;
+  font-size: 16px;
   font-weight: 600;
   text-decoration: none;
   white-space: nowrap;
 }
 
-.who {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-left: auto;
-  color: var(--on-dark-2);
+.console-head .lang {
+  flex: none;
+  padding: 0 2px 0 7px;
+}
+
+.console-head .lang select {
+  max-width: 76px;
+  min-height: 34px;
+  padding: 0 2px;
   font-size: 14px;
-  white-space: nowrap;
+}
+
+.who {
+  flex: 1;
+  min-width: 0;
+  margin-left: auto;
 }
 
 .who select {
-  max-width: 140px;
-  min-height: 40px;
-  padding: 0 8px;
-  border: 1px solid var(--line-dark);
+  width: 100%;
+  min-height: 38px;
+  padding: 0 4px;
+  border: 2px solid var(--line-dark);
   border-radius: var(--radius);
   background: var(--asphalt-2);
   color: var(--on-dark);
+  font-size: 14px;
   font-weight: 600;
 }
 
 .icon-btn {
   display: grid;
   place-items: center;
-  width: 44px;
-  height: 44px;
-  border: 1px solid var(--line-dark);
+  flex: none;
+  width: 38px;
+  height: 38px;
+  border: 2px solid var(--line-dark);
   border-radius: var(--radius);
   background: none;
   color: var(--on-dark);
@@ -82,11 +95,11 @@
 .earn-amount {
   color: var(--yellow);
   font-family: var(--font-display);
-  font-size: 58px;
+  font-size: 56px;
   font-weight: 800;
-  font-stretch: 76%;
   font-variant-numeric: tabular-nums;
-  line-height: 0.95;
+  letter-spacing: -0.03em;
+  line-height: 1;
 }
 
 .earn-side {
@@ -97,7 +110,7 @@
 .earn-side strong {
   font-family: var(--font-display);
   font-size: 23px;
-  font-stretch: 85%;
+  font-weight: 800;
   font-variant-numeric: tabular-nums;
 }
 
@@ -106,8 +119,7 @@
   align-items: center;
   gap: 8px;
   padding: 18px 14px 8px;
-  font-size: 20px;
-  font-stretch: 88%;
+  font-size: 21px;
 }
 
 .count {
@@ -122,15 +134,16 @@
   display: grid;
   gap: 12px;
   margin: 14px 14px 0;
-  padding: 0 14px 12px;
-  border: 2px solid var(--yellow);
+  padding: 0 14px 14px;
+  border: 3px solid var(--marigold);
   border-radius: var(--radius);
   background: var(--asphalt-2);
 }
 
 .active-job .section-label {
   padding: 12px 0 0;
-  color: var(--yellow);
+  color: var(--marigold);
+  font-size: 18px;
 }
 
 .just-accepted {
@@ -139,10 +152,10 @@
 
 @keyframes accepted-ring {
   from {
-    box-shadow: 0 0 0 8px rgba(255, 194, 14, 0.5);
+    box-shadow: 0 0 0 8px rgba(255, 122, 26, 0.55);
   }
   to {
-    box-shadow: 0 0 0 0 rgba(255, 194, 14, 0);
+    box-shadow: 0 0 0 0 rgba(255, 122, 26, 0);
   }
 }
 
@@ -166,7 +179,7 @@
   font-family: var(--font-display);
   font-size: 42px;
   font-weight: 800;
-  font-stretch: 78%;
+  letter-spacing: -0.03em;
   line-height: 1;
 }
 
@@ -200,7 +213,7 @@
 
 .last-reject {
   padding: 8px 10px;
-  border-left: 4px solid var(--red-on-dark);
+  border-left: 5px solid var(--red-on-dark);
   background: var(--asphalt-3);
   font-size: 15px;
 }
@@ -226,13 +239,13 @@
   grid-template-areas:
     'photo mid right'
     'photo mid btn';
-  gap: 4px 12px;
+  gap: 6px 12px;
   padding: 12px 14px;
   border-bottom: 1px solid var(--line-dark);
 }
 
 .job-row.is-new {
-  box-shadow: inset 4px 0 0 var(--yellow);
+  box-shadow: inset 5px 0 0 var(--marigold);
 }
 
 .job-photo {
@@ -252,12 +265,19 @@
   min-width: 0;
 }
 
+/* Tags in a list row are secondary to the payout, and Indic labels run long. */
+.job-row .tag {
+  min-height: 24px;
+  padding: 1px 7px;
+  font-size: 13.5px;
+}
+
 .job-why {
   display: -webkit-box;
   overflow: hidden;
   color: var(--on-dark-2);
   font-size: 14px;
-  line-height: 1.3;
+  line-height: 1.35;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
 }
@@ -280,8 +300,8 @@
   font-family: var(--font-display);
   font-size: 30px;
   font-weight: 800;
-  font-stretch: 78%;
   font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
   line-height: 1;
 }
 
@@ -293,9 +313,9 @@
 .btn-accept {
   grid-area: btn;
   align-self: end;
-  min-height: 44px;
-  padding: 0 14px;
-  border-color: var(--on-dark);
+  min-height: 46px;
+  padding: 0 16px;
+  border-color: #000;
   background: var(--on-dark);
   color: var(--ink);
   font-size: 17px;
@@ -347,8 +367,7 @@
 .held-pay {
   font-family: var(--font-display);
   font-size: 22px;
-  font-weight: 700;
-  font-stretch: 85%;
+  font-weight: 800;
 }
 
 /* Proof camera */
@@ -356,13 +375,14 @@
 .ref-photo {
   position: absolute;
   z-index: 3;
-  top: calc(max(12px, env(safe-area-inset-top)) + 56px);
+  top: calc(max(12px, env(safe-area-inset-top)) + 58px);
 }
 
 .code-plate {
   left: 12px;
   display: grid;
   padding: 6px 12px 8px;
+  border: 2px solid var(--ink);
   border-radius: 5px;
   background: var(--yellow);
   color: var(--ink);
@@ -398,12 +418,14 @@
 .ref-photo figcaption {
   margin-top: 3px;
   border-radius: 3px;
-  background: rgba(21, 23, 26, 0.8);
+  background: rgba(20, 22, 26, 0.82);
+  color: var(--on-dark);
   font-size: 12px;
   text-align: center;
 }
 
 .sheet.sheet-dark {
+  border-top-color: var(--yellow);
   background: var(--asphalt-2);
   color: var(--on-dark);
 }
@@ -428,7 +450,7 @@
   display: grid;
   grid-template-columns: 28px 1fr;
   gap: 10px;
-  padding: 7px 0;
+  padding: 8px 0;
   border-bottom: 1px solid var(--line-dark);
 }
 
@@ -447,13 +469,14 @@
   border-color: var(--yellow);
   background: var(--yellow);
   color: var(--ink);
-  animation: tick 280ms cubic-bezier(0.2, 0.9, 0.3, 1.4);
+  animation: tick 280ms var(--ease-pop);
 }
 
 .is-fail .check-mark {
   border-color: var(--red);
   background: var(--red);
   color: #fff;
+  animation: shake 320ms ease-in-out;
 }
 
 .is-running .check-mark {
@@ -463,7 +486,7 @@
 }
 
 .check.is-skipped {
-  opacity: 0.55;
+  opacity: 0.5;
 }
 
 .check-label {
@@ -475,15 +498,21 @@
   display: block;
   color: var(--on-dark-2);
   font-size: 13.5px;
-  line-height: 1.3;
+  line-height: 1.35;
 }
 
 @keyframes tick {
   from {
     transform: scale(0.4);
   }
-  to {
-    transform: scale(1);
+}
+
+@keyframes shake {
+  25% {
+    transform: translateX(-4px);
+  }
+  75% {
+    transform: translateX(4px);
   }
 }
 
@@ -507,8 +536,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 0 6px;
   margin-left: -8px;
+  padding: 10px 0 6px;
 }
 
 .result-id {
@@ -522,7 +551,6 @@
   gap: 12px;
   margin-top: 8px;
   font-size: 40px;
-  font-stretch: 80%;
 }
 
 .result-title.is-paused {
@@ -533,12 +561,13 @@
   display: inline-grid;
   place-items: center;
   flex: none;
-  width: 44px;
-  height: 44px;
+  width: 46px;
+  height: 46px;
   border-radius: 50%;
   background: var(--yellow);
   color: var(--ink);
   font-size: 24px;
+  animation: tick 320ms var(--ease-pop);
 }
 
 .hold-box {
@@ -546,7 +575,7 @@
   gap: 4px;
   margin: 18px 0;
   padding: 14px;
-  border: 2px solid var(--yellow);
+  border: 3px solid var(--yellow);
   border-radius: var(--radius);
 }
 
@@ -566,11 +595,11 @@
   margin: 10px 0 6px;
   color: var(--yellow);
   font-family: var(--font-display);
-  font-size: 92px;
+  font-size: 88px;
   font-weight: 800;
-  font-stretch: 75%;
   font-variant-numeric: tabular-nums;
-  line-height: 0.9;
+  letter-spacing: -0.04em;
+  line-height: 0.95;
 }
 
 .result-note {
@@ -590,7 +619,7 @@
   color: var(--on-dark-2);
 }
 
-.is-dark .split .split-you dt {
+.is-dark .split .split-picker dt {
   color: var(--ink);
 }
 

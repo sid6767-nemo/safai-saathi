@@ -4,7 +4,7 @@
 // public/js/payout.js, so the model never sets a price directly.
 
 import { z } from 'zod';
-import { askForJson, imageBlock, jsonRoute } from './_lib/ai.js';
+import { askForJson, imageBlock, jsonRoute, languageInstruction } from './_lib/ai.js';
 
 const Analysis = z.object({
   is_waste_site: z.boolean(),
@@ -34,9 +34,9 @@ items_seen: up to 5 short, lowercase noun phrases for what is visible.
 
 reasoning: one plain sentence of at most 25 words, written for the citizen who took the photo, explaining the type and size you chose.`;
 
-export default jsonRoute(async ({ image }) =>
+export default jsonRoute(async ({ image, language }) =>
   askForJson({
-    system: SYSTEM,
+    system: SYSTEM + languageInstruction(language),
     schema: Analysis,
     content: [imageBlock(image), { type: 'text', text: 'Label this reported spot.' }],
   }),

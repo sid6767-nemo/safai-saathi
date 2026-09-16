@@ -24,6 +24,15 @@ function pickProvider() {
   );
 }
 
+// The app shows the model's one-line reasoning to the user, so it should be in their language.
+const LANGUAGES = ['English', 'Hindi', 'Tamil', 'Kannada'];
+
+export function languageInstruction(language) {
+  return LANGUAGES.includes(language) && language !== 'English'
+    ? `\n\nWrite every text field you return (reasoning, and any description of what you see) in ${language}, in that language's own script. Keep the field names and the fixed label values in English.`
+    : '';
+}
+
 // A provider-neutral image block; each provider converts it to its own format.
 export function imageBlock(dataUrl) {
   const match = /^data:(image\/(?:jpeg|png|webp));base64,([A-Za-z0-9+/=]+)$/.exec(dataUrl ?? '');
