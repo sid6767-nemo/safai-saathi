@@ -1,0 +1,118 @@
+/* Pieces that only exist in the React build: the map canvas, React Bits wrappers, row motion. */
+
+/* The map canvas gets its own stacking context, so Leaflet's panes can't cover the maximise button. */
+.map-canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.map-box .map-expand {
+  z-index: 1;
+}
+
+.map-box .map-fallback,
+.map-big-wrap .map-fallback {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.map-big-wrap {
+  position: relative;
+  height: calc(100dvh - 92px);
+}
+
+.map-big-wrap .map-big {
+  height: 100%;
+}
+
+/* Home backdrop: the drifting scraps sit behind the headline and never take a tap. */
+.home-report {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* Faint behind the headline so it stays easy to read, fuller toward the bottom of the hero. */
+.home-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  opacity: 0.7;
+  pointer-events: none;
+  -webkit-mask-image: linear-gradient(to bottom, rgb(0 0 0 / 0.2) 0%, rgb(0 0 0 / 0.25) 55%, #000 100%);
+  mask-image: linear-gradient(to bottom, rgb(0 0 0 / 0.2) 0%, rgb(0 0 0 / 0.25) 55%, #000 100%);
+}
+
+.home-backdrop > * {
+  width: 100%;
+  height: 100%;
+}
+
+/* Glass step icons, centred above the written steps. */
+.how-icons {
+  margin: 4px auto 16px;
+}
+
+/* The specular button fills the column like the other block buttons. */
+.home-picker-btn {
+  width: 100%;
+  min-height: 54px;
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+}
+
+/* BlurText renders the headline as flex items with its own word spaces. */
+.home-title {
+  margin: 0;
+}
+
+/* Magnet moves its inner box; the button inside should still fill the column. */
+.home-cta > div > div {
+  width: 100%;
+}
+
+/* CountUp renders inline slots; keep them on the parent's type. */
+.earn-amount span,
+.release-amount span,
+.receipt dd span,
+.reward-strip strong span {
+  font: inherit;
+  letter-spacing: inherit;
+}
+
+/* ShinyText inside headings keeps the heading's size and weight. */
+.sheet-title span,
+.result-title span:not(.result-mark) {
+  font: inherit;
+}
+
+/* Open jobs arrive one after another rather than all at once. */
+.job-row {
+  animation: row-in 320ms var(--ease-out) both;
+  animation-delay: calc(min(var(--row, 0), 8) * 45ms);
+}
+
+@keyframes row-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+/* The accepted job drops into its slot, then the ring confirms it. */
+.active-job.just-accepted {
+  animation:
+    slot-in 380ms var(--ease-pop) both,
+    accepted-ring 900ms ease-out 120ms;
+}
+
+@keyframes slot-in {
+  from {
+    opacity: 0;
+    transform: translateY(-12px) scale(0.98);
+  }
+}
+

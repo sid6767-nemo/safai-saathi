@@ -92,7 +92,7 @@ reporter reward = picker payout ÷ 20   (paid by the fund on top, not taken from
 
 Wet waste pays more because it's heavier, smells, and has to reach a compost or biogas site the same
 day. The rates are illustrative, not official ward rates, and live in
-[`public/js/config.js`](public/js/config.js). The AI only supplies the two labels; it never sets a price.
+[`src/lib/config.js`](src/lib/config.js). The AI only supplies the two labels; it never sets a price.
 
 ## Choosing the AI
 
@@ -129,7 +129,7 @@ no key at all.
 
 The toggle sits next to the language menu on both entry screens and is remembered per browser; with
 no choice saved the app follows the phone's own setting. Only the four surface tokens in
-[`tokens.css`](public/css/tokens.css) change between themes, so every component follows.
+[`tokens.css`](src/styles/tokens.css) change between themes, so every component follows.
 
 ## Demo controls
 
@@ -147,21 +147,22 @@ The "spot is still dirty" rejection needs no control: take the proof photo witho
 
 ## Run it locally
 
-Needs Node 20.12 or newer and a free [Gemini API key](https://aistudio.google.com/apikey)
+Needs Node 20.19 or newer and a free [Gemini API key](https://aistudio.google.com/apikey)
 (or an Anthropic key).
 
 ```bash
 npm install
 cp .env.example .env        # then paste your key after GEMINI_API_KEY=
-npm run dev                 # http://localhost:4173
+npm run dev                 # http://localhost:4173, with hot reload
+npm run build               # production bundle in dist/
 ```
 
 Browsers allow the camera and GPS on `localhost`. On a phone you need HTTPS, so use the deployed version.
 
 ## Deploy
 
-The repo is ready for [Vercel](https://vercel.com): static files in `public/`, two serverless
-functions in `api/`, no build step.
+The repo is ready for [Vercel](https://vercel.com): Vite builds the React app into `dist/`, and the
+three files in `api/` run as serverless functions.
 
 ```bash
 vercel deploy --prod
@@ -177,13 +178,14 @@ The two flows are meant to feel like two different products for two different pe
 - **Reporter**: a citizen with 30 seconds on a street corner. The camera *is* the app: full-bleed
   viewfinder, one fat yellow shutter bar in the thumb zone, then a receipt-style sheet over the photo.
 - **Picker**: someone working a shift. A dark console with today's earnings in big numerals, the job
-  in hand pinned below, and open jobs as dense rows ranked by distance. No map: on foot, "how far"
-  and "how much" decide it.
+  in hand pinned below, and open jobs as dense rows ranked by distance. The list has no map: on foot,
+  "how far" and "how much" decide it. A map appears once a job is accepted, when the exact spot matters.
 
 Colours come from Indian street and festival colour rather than eco branding: asphalt `#14161A`,
 kerb concrete `#E2E5E0`, auto-rickshaw yellow `#FFC20E` for actions, marigold `#FF7A1A` for the job
 in hand, kumkum pink `#E8336D` for rewards, and the Swachh Bharat segregation-bin colours, dry blue
-`#1E5BC6` and wet green `#1B7A43` (the only green in the app, so it always means wet waste), plus
+`#1E5BC6` and wet green `#1B7A43` (only ever used for waste types; a brighter signal green
+`#24B26B` marks verified and paid), plus
 signal red `#D12A25` for rejections. Buttons are slabs with a hard offset shadow, like painted
 signage, and they move when pressed.
 
@@ -194,13 +196,44 @@ Mukta Malar and Baloo Tamma 2 for body text; IBM Plex Mono for evidence (codes, 
 timestamps). Motion confirms that something happened: a screen arriving, a job accepted, each check
 passing or failing, a payout counting up. All of it switches off under `prefers-reduced-motion`.
 
+## Built with
+
+React 19 and Vite. The logic in `src/lib/` is plain JavaScript with no framework, so the proof
+checks, payout formula and state machine read the same as before the move to React.
+
+Eight components come from [React Bits](https://reactbits.dev). The rule for picking them: the main
+users are waste pickers on phones, so nothing that gets in the way, slows a cheap phone or needs
+explaining. Each one marks something that just happened or deserves attention:
+
+| Component | Where |
+|---|---|
+| Particles | Behind the home headline: slow scraps of litter in the bin colours tumbling down, faint behind the text |
+| GlassIcons | The three "How it works" tiles (camera, sack, rupee), each a link to that step's screen |
+| BlurText | The home headline resolves word by word (replays when the language changes) |
+| Magnet | The "Report waste" button leans toward the pointer on a laptop |
+| SpecularButton | "Open picker dashboard": a dark glass button with a moving edge of light |
+| Counter | The picker's earnings and jobs done: odometer digits roll up when a payout lands |
+| CountUp | The receipt's payout (re-counts as you change the estimate), rewards, the released payout |
+| ShinyText | "Reported", "Cleanup verified" and "Payout released": one sweep of light when they appear |
+
+Considered and left out: carousels and galleries (pickers need a list they can scan, and there are
+no real photos to show yet), Glass Surface over the camera (WebGL on top of a live camera feed is
+too heavy for a cheap phone), and Grainient as the background (it read as grimy, the opposite of
+clean). The WebGL pieces pause when off-screen or in a background tab.
+
+They live in `src/components/reactbits/` as copied source, which is how React Bits is meant to be
+used. One local change: BlurText takes an `as` prop so the headline stays an `<h1>`. React Bits is
+under the MIT + Commons Clause license: free to use in an app like this one, but the components
+themselves may not be sold or redistributed on their own. All of them stop animating under
+`prefers-reduced-motion`.
+
 ## Languages
 
 The app runs in **English, हिंदी, தமிழ் and ಕನ್ನಡ**, switched from the menu on the home screen or
 the dashboard header, and remembered in the browser. The choice is also sent to the AI, so its
 one-line reasoning comes back in the same language.
 
-Strings live in [`public/js/i18n/`](public/js/i18n/), one file per language with identical keys.
+Strings live in [`src/lib/i18n/`](src/lib/i18n/), one file per language with identical keys.
 `npm run check` fails if a language is missing a key or its placeholders don't match English, and
 English is the fallback at runtime for anything still missing.
 
@@ -210,7 +243,7 @@ English is the fallback at runtime for anything still missing.
 
 ## Swapping the sample jobs for real ones
 
-The three sample jobs are defined in [`public/js/seed.js`](public/js/seed.js). To use real photos:
+The three sample jobs are defined in [`src/lib/seed.js`](src/lib/seed.js). To use real photos:
 put JPEGs in `public/assets/samples/`, point each job's `photo` at them, set `illustration: false`
 (so the same-place check runs), and update the labels to match the photos. Sample jobs sit hundreds
 of metres from the anchor point, so their proof photos fail the 30 m check unless you are really there.
@@ -218,31 +251,37 @@ of metres from the anchor point, so their proof photos fail the 30 m check unles
 ## Project structure
 
 ```
+index.html            the page shell; Vite injects the app
+src/
+  main.jsx            applies theme and language, then mounts <App>
+  App.jsx             hash router, demo controls, toasts
+  hooks.js            useStore, useLanguage, useTheme, useNow, useHashPath
+  views/              Home, Report, Reports, Picker, Proof, Job
+  components/         SpotMap, Photo, WasteTags, LanguageMenu, ThemeButton, DemoControls, ...
+  components/reactbits/  Particles, GlassIcons, BlurText, Magnet, SpecularButton, Counter, CountUp, ShinyText
+  lib/                framework-free logic, unchanged by the React move:
+    config.js         every tunable number (rates, radii, TTLs, hold window)
+    store.js          job state machine, persistence, cross-tab sync
+    camera.js         live capture and the evidence stamp
+    geo.js            GPS reads and distance maths
+    verify.js         the six proof checks and their rejection copy
+    payout.js         the payout formula
+    ai.js             calls to /api/analyze and /api/verify
+    maps.js           Leaflet / Google map and the walking route
+    i18n.js, i18n/    language loading and the en, hi, ta, kn strings
+    pickers.js, seed.js, photos.js, theme.js, time.js, toast.js, css.js
+  styles/             tokens, base, reporter side, picker side, react
+public/assets/        favicon and the sample-job drawings
 api/
   _lib/ai.js          picks the provider, image blocks, answer validation, error messages
   _lib/gemini.js      Google Gemini provider (REST, free tier)
   _lib/claude.js      Anthropic Claude provider (SDK)
   analyze.js          POST /api/analyze: report photo -> type, size, reasoning
   verify.js           POST /api/verify: before + after -> code read, cleared, same place
-public/
-  index.html
-  css/                tokens, base, reporter side, picker side
-  js/
-    config.js         every tunable number (rates, radii, TTLs, hold window)
-    i18n.js           language loading, switching and t()
-    i18n/             en, hi, ta, kn string files (identical keys)
-    store.js          job state machine, persistence, cross-tab sync
-    camera.js         live capture and the evidence stamp
-    geo.js            GPS reads and distance maths
-    verify.js         the six proof checks and their rejection copy
-    payout.js         the payout formula
-    pickers.js        simulated picker roster
-    seed.js           sample jobs
-    demo.js           demo controls
-    views/            home, report, reports, picker, proof, job
+  config.js           GET /api/config: whether a Google Maps key is set
 scripts/
-  dev-server.mjs      zero-dependency local server that runs the api/ handlers
-  check.mjs           fails if any file or gallery input appears in public/
+  dev-server.mjs      Vite in middleware mode plus the same api/ handlers Vercel runs
+  check.mjs           fails if any file or gallery input appears, or a language is missing keys
 ```
 
 ## Known limits

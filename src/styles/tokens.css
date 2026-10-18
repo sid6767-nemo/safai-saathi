@@ -1,0 +1,83 @@
+/* Palette from Indian street and festival colour rather than "eco" branding.
+   Dry-bin blue and wet-bin green are the Swachh Bharat segregation colours, so those two always
+   mean a waste type. Marigold marks work in progress, kumkum pink marks rewards, and the brighter
+   signal green and blue below carry state: verified/paid, and information. */
+:root {
+  --asphalt: #14161a; /* picker console ground */
+  --asphalt-2: #1d2126;
+  --asphalt-3: #292e35;
+  --line-dark: #3a4048;
+
+  --yellow: #ffc20e; /* auto-rickshaw canopy, hazard striping: brand and primary action */
+  --yellow-press: #e0a800;
+  --marigold: #ff7a1a; /* work in progress */
+  --kumkum: #e8336d; /* rewards and the reporter's share */
+  --dry: #1e5bc6; /* dry-bin blue */
+  --wet: #1b7a43; /* wet-bin green */
+  --verified: #24b26b; /* checks that passed, cleanups verified, money paid */
+  --verified-soft: #35d183; /* the same green, legible on the dark console */
+  --info: #2f7de1; /* steps, GPS, the map, anything explanatory */
+  --info-soft: #6aa8f5;
+  --red: #d12a25; /* rejections and flags */
+  --red-on-dark: #ff7a70;
+
+  /* Text that sits on a bright fill stays dark in both themes. */
+  --on-accent: #14161a;
+  --on-dark: #f2f4f0;
+  --on-dark-2: #a8aeb6;
+  --page: #0b0c0e;
+
+  /* Light theme surfaces. The dark theme below swaps these four, and everything follows. */
+  --concrete: #e2e5e0;
+  --concrete-2: #f2f4f0;
+  --line-light: #bfc4bd;
+  --ink: #14161a;
+  --ink-2: #454a51;
+  --press-shadow: 4px 4px 0 #14161a;
+  --press-shadow-dark: 4px 4px 0 #000;
+
+  --font-display: 'Bricolage Grotesque', 'Anek Latin', system-ui, sans-serif;
+  --font-body: 'Mukta', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  --font-deva: 'Anek Devanagari', 'Mukta', sans-serif;
+
+  --col: 480px; /* the app is phone-width, even on a laptop */
+  --radius: 8px;
+  --hazard: repeating-linear-gradient(-45deg, var(--yellow) 0 8px, var(--asphalt) 8px 16px);
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-pop: cubic-bezier(0.2, 0.9, 0.3, 1.4);
+}
+
+/* Dark theme: the reporter's concrete surfaces go dark; the picker console already is.
+   Only these surface tokens change, so every component follows without extra rules. */
+:root[data-theme='dark'] {
+  --concrete: #1a1e23;
+  --concrete-2: #23282f;
+  --line-light: #3a4149;
+  --ink: #f2f4f0;
+  --ink-2: #a3a9b1;
+  --press-shadow: 4px 4px 0 #000;
+  --page: #050607;
+}
+
+:root[data-script='deva'] {
+  --font-display: 'Anek Devanagari', 'Bricolage Grotesque', sans-serif;
+  --font-body: 'Mukta', system-ui, sans-serif;
+}
+
+:root[data-script='taml'] {
+  --font-display: 'Anek Tamil', 'Bricolage Grotesque', sans-serif;
+  --font-body: 'Mukta Malar', system-ui, sans-serif;
+}
+
+:root[data-script='knda'] {
+  --font-display: 'Anek Kannada', 'Bricolage Grotesque', sans-serif;
+  --font-body: 'Baloo Tamma 2', system-ui, sans-serif;
+}
+
+/* Indic scripts need more line height to stay legible. */
+:root[data-script='taml'],
+:root[data-script='knda'],
+:root[data-script='deva'] {
+  --display-line: 1.25;
+}

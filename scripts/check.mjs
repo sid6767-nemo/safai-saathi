@@ -19,12 +19,18 @@ async function* walk(dir) {
   for (const entry of await readdir(dir, { withFileTypes: true })) {
     const path = join(dir, entry.name);
     if (entry.isDirectory()) yield* walk(path);
-    else if (/\.(html|js|css)$/.test(entry.name)) yield path;
+    else if (/\.(html|jsx?|css)$/.test(entry.name)) yield path;
   }
 }
 
+async function* appFiles() {
+  yield join(root, 'index.html');
+  yield* walk(join(root, 'src'));
+  yield* walk(join(root, 'public'));
+}
+
 let problems = 0;
-for await (const file of walk(join(root, 'public'))) {
+for await (const file of appFiles()) {
   const lines = (await readFile(file, 'utf8')).split('\n');
   lines.forEach((line, i) => {
     for (const [pattern, label] of FORBIDDEN) {
@@ -44,7 +50,7 @@ console.log('OK: photos can only come from the live camera.');
 
 // Language files: same keys, same placeholders.
 const load = async (code) =>
-  (await import(pathToFileURL(join(root, 'public/js/i18n', `${code}.js`)).href)).strings;
+  (await import(pathToFileURL(join(root, 'src/lib/i18n', `${code}.js`)).href)).strings;
 const placeholders = (text) => [...text.matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort().join(',');
 
 const en = await load('en');

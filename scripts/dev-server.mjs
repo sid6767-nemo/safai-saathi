@@ -1,13 +1,13 @@
-// Zero-dependency local server: serves public/ and runs the same api/*.js handlers Vercel runs.
-// Usage: npm run dev   (reads ANTHROPIC_API_KEY from .env if present)
+// Local dev server: Vite (React, hot reload) for the app, plus the same api/*.js handlers that
+// Vercel runs as serverless functions.
+// Usage: npm run dev   (reads GEMINI_API_KEY / ANTHROPIC_API_KEY from .env if present)
 
 import http from 'node:http';
-import { readFile } from 'node:fs/promises';
-import { dirname, extname, join, normalize, sep } from 'node:path';
+import { dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { createServer as createVite } from 'vite';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
-const publicDir = join(root, 'public');
 const PORT = Number(process.env.PORT) || 4173;
 const MAX_BODY_BYTES = 8 * 1024 * 1024;
 
@@ -16,18 +16,6 @@ try {
 } catch {
   // No .env: the API routes answer with a clear "no API key" error instead.
 }
-
-const MIME = {
-  '.html': 'text/html; charset=utf-8',
-  '.js': 'text/javascript; charset=utf-8',
-  '.css': 'text/css; charset=utf-8',
-  '.svg': 'image/svg+xml',
-  '.png': 'image/png',
-  '.jpg': 'image/jpeg',
-  '.jpeg': 'image/jpeg',
-  '.json': 'application/json',
-  '.webmanifest': 'application/manifest+json',
-};
 
 function readBody(req) {
   return new Promise((resolve, reject) => {
@@ -43,6 +31,11 @@ function readBody(req) {
     req.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
     req.on('error', reject);
   });
+}
+
+function sendText(res, status, text) {
+  res.writeHead(status, { 'Content-Type': 'text/plain; charset=utf-8' });
+  res.end(text);
 }
 
 // Mimics the helpers Vercel's Node runtime adds: req.body, res.status(), res.json().
@@ -76,42 +69,23 @@ async function handleApi(pathname, req, res) {
   await handler(req, res);
 }
 
-async function serveStatic(pathname, res) {
-  let rel = normalize(decodeURIComponent(pathname));
-  if (rel.endsWith(sep) || rel.endsWith('/')) rel = join(rel, 'index.html');
-  const file = join(publicDir, rel);
-  if (!file.startsWith(publicDir + sep)) return sendText(res, 403, 'Forbidden');
+const server = http.createServer();
+const vite = await createVite({ root, appType: 'spa', server: { middlewareMode: true, hmr: { server } } });
+
+server.on('request', async (req, res) => {
+  const { pathname } = new URL(req.url, 'http://localhost');
+  if (!pathname.startsWith('/api/')) return vite.middlewares(req, res);
   try {
-    const data = await readFile(file);
-    res.writeHead(200, {
-      'Content-Type': MIME[extname(file)] ?? 'application/octet-stream',
-      'Cache-Control': 'no-store',
-    });
-    res.end(data);
-  } catch {
-    sendText(res, 404, 'Not found');
+    await handleApi(pathname, req, res);
+  } catch (err) {
+    console.error(err);
+    if (!res.headersSent) sendText(res, 500, 'Internal error');
   }
-}
+});
 
-function sendText(res, status, text) {
-  res.writeHead(status, { 'Content-Type': 'text/plain; charset=utf-8' });
-  res.end(text);
-}
-
-http
-  .createServer(async (req, res) => {
-    const { pathname } = new URL(req.url, 'http://localhost');
-    try {
-      if (pathname.startsWith('/api/')) await handleApi(pathname, req, res);
-      else await serveStatic(pathname, res);
-    } catch (err) {
-      console.error(err);
-      if (!res.headersSent) sendText(res, 500, 'Internal error');
-    }
-  })
-  .listen(PORT, () => {
-    console.log(`Safai Saathi running at http://localhost:${PORT}`);
-    if (!process.env.ANTHROPIC_API_KEY) {
-      console.log('No ANTHROPIC_API_KEY found: AI analysis will report that it is not configured.');
-    }
-  });
+server.listen(PORT, () => {
+  console.log(`Safai Saathi running at http://localhost:${PORT}`);
+  if (!process.env.GEMINI_API_KEY && !process.env.ANTHROPIC_API_KEY) {
+    console.log('No GEMINI_API_KEY or ANTHROPIC_API_KEY found: AI analysis will report that it is not configured.');
+  }
+});
