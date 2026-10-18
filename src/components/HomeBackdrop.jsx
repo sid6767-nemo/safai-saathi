@@ -1,26 +1,27 @@
 import { useTheme } from '../hooks.js';
+import { litterAtlas } from '../lib/litter.js';
 import Particles from './reactbits/Particles/Particles.jsx';
 
-// Slow scraps of litter in the bin and brand colours, tumbling down behind the home headline.
-// They lean after the cursor or a finger (Particles listens on the window, so the backdrop itself
-// can ignore taps). It pauses itself off-screen, in background tabs and under reduced motion.
-const SCRAPS = ['#1e5bc6', '#1b7a43', '#ffc20e', '#ff7a1a', '#e8336d'];
-
+// Street litter drifting down behind the home headline: bottles, polythene bags, a crushed can,
+// chai cups, a chips packet, banana peel, cardboard and a milk packet, small and faded so they sit
+// in the background. They lean after the cursor or a finger (Particles listens on the window, so
+// the backdrop itself can ignore taps), and pause off-screen, in background tabs and under
+// reduced motion.
 export default function HomeBackdrop() {
   const theme = useTheme();
   return (
-    <div className="home-backdrop" aria-hidden="true">
+    <div className={`home-backdrop home-backdrop-${theme}`} aria-hidden="true">
       <Particles
-        particleColors={SCRAPS}
-        particleCount={90}
+        shape="sprite"
+        sprites={litterAtlas()}
+        particleCount={70}
         particleSpread={2.6}
         cameraDistance={32}
         speed={0.05}
-        shape="square"
         drift="down"
         driftSpeed={0.3}
-        particleBaseSize={300}
-        sizeRandomness={0.9}
+        particleBaseSize={720}
+        sizeRandomness={0.7}
         moveParticlesOnHover
         clickBurst={false}
         glow={0}

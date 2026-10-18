@@ -3,7 +3,8 @@
 import { useEffect, useRef } from 'react';
 import './Particles.css';
 
-const SHAPES = { circle: 0, square: 1, ring: 2, sparkle: 3 };
+// Local change: `sprite` draws each particle as a cell of the `sprites` canvas (see lib/litter.js).
+const SHAPES = { circle: 0, square: 1, ring: 2, sparkle: 3, sprite: 4 };
 const EFFECTS = { parallax: 0, repel: 1, attract: 2 };
 const DRIFTS = { none: 0, up: 1, down: 2, forward: 3 };
 const MAX_COUNT = 20000;
@@ -147,6 +148,8 @@ uniform float uTime;
 uniform float uSoft;
 uniform float uShimmer;
 uniform float uOpacity;
+uniform sampler2D uAtlas;
+uniform float uSpriteCount;
 in vec2 vLocal;
 in float vRadius;
 in float vBlur;
@@ -162,6 +165,21 @@ float ray(vec2 q, float aa) {
 }
 
 void main() {
+  if (uShape == 4) {
+    // Each sprite tumbles at its own pace; the drawings stay inside the inscribed circle, so a
+    // turned sprite is never clipped by the square it is drawn in.
+    float turn = vSeed * 6.2832 + uTime * (vSeed - 0.5) * 0.7;
+    float c = cos(turn);
+    float s = sin(turn);
+    vec2 p = mat2(c, -s, s, c) * vLocal / max(vRadius * 2.0, 0.0001) + 0.5;
+    if (p.x < 0.0 || p.x > 1.0 || p.y < 0.0 || p.y > 1.0) discard;
+    float cell = min(floor(fract(vSeed * 7.13) * uSpriteCount), uSpriteCount - 1.0);
+    vec4 tex = texture(uAtlas, vec2((cell + p.x) / uSpriteCount, 1.0 - p.y));
+    float k = vAlpha * uOpacity;
+    if (tex.a * k < 0.002) discard;
+    outColor = tex * k;
+    return;
+  }
   float soft = vBlur + 0.7 / uRatio + vRadius * uSoft;
   float d = length(vLocal);
   float shape;
@@ -307,6 +325,7 @@ const Particles = ({
   intro = true,
   opacity = 1,
   lightMode = false,
+  sprites = null,
   paused = false,
   className = '',
   style
@@ -343,6 +362,7 @@ const Particles = ({
     intro,
     opacity: clamp(opacity, 0, 1),
     lightMode,
+    sprites,
     paused
   };
   const settingsRef = useRef(settings);
@@ -454,6 +474,8 @@ const Particles = ({
     };
     let raf = 0;
     let last = 0;
+    let atlasTexture = null;
+    let atlasSource = null;
     let visible = true;
 
     const rebuild = s => {
@@ -711,6 +733,26 @@ const Particles = ({
       gl.uniform1f(u.uSoft, s.soft ? 0.2 : 0);
       gl.uniform1f(u.uShimmer, s.lightMode ? 0 : 1);
       gl.uniform1f(u.uOpacity, s.opacity);
+      if (s.shape === 4 && s.sprites) {
+        if (atlasSource !== s.sprites) {
+          atlasTexture ??= gl.createTexture();
+          gl.bindTexture(gl.TEXTURE_2D, atlasTexture);
+          // Premultiplied on upload, so mipmaps don't grow dark fringes around the drawings.
+          gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
+          gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, s.sprites);
+          gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+          gl.generateMipmap(gl.TEXTURE_2D);
+          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+          atlasSource = s.sprites;
+        }
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, atlasTexture);
+        gl.uniform1i(u.uAtlas, 0);
+        gl.uniform1f(u.uSpriteCount, s.sprites.spriteCount ?? 1);
+      }
       gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, cloud.count);
       gl.bindVertexArray(null);
     };
@@ -856,6 +898,7 @@ const Particles = ({
       window.removeEventListener('pointercancel', onPointerUp);
       document.documentElement.removeEventListener('pointerleave', onPointerLeave);
       document.removeEventListener('visibilitychange', onVisibility);
+      if (atlasTexture) gl.deleteTexture(atlasTexture);
       gl.deleteProgram(dots.program);
       gl.deleteProgram(lines.program);
       [corners, positionBuffer, randomBuffer, colorBuffer, lineBuffer].forEach(buffer => gl.deleteBuffer(buffer));

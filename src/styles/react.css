@@ -45,6 +45,17 @@
   mask-image: linear-gradient(to bottom, rgb(0 0 0 / 0.2) 0%, rgb(0 0 0 / 0.25) 55%, #000 100%);
 }
 
+/* Slightly muted so the litter reads as part of the street, not as stickers on top of it. */
+.home-backdrop-light {
+  opacity: 0.75;
+  filter: saturate(0.85);
+}
+
+.home-backdrop-dark {
+  opacity: 0.6;
+  filter: saturate(0.8) brightness(0.9);
+}
+
 .home-backdrop > * {
   width: 100%;
   height: 100%;
