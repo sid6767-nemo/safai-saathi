@@ -1,8 +1,6 @@
 import HomeBackdrop from '../components/HomeBackdrop.jsx';
 import LanguageMenu from '../components/LanguageMenu.jsx';
 import BlurText from '../components/reactbits/BlurText/BlurText.jsx';
-import Magnet from '../components/reactbits/Magnet/Magnet.jsx';
-import SpecularButton from '../components/reactbits/SpecularButton/SpecularButton.jsx';
 import StepIcons from '../components/StepIcons.jsx';
 import ThemeButton from '../components/ThemeButton.jsx';
 import { useStore, useTitle } from '../hooks.js';
@@ -47,11 +45,9 @@ export default function Home({ onOpenDemo }) {
         />
 
         <div className="home-cta">
-          <Magnet padding={60} magnetStrength={4} style={{ display: 'block' }}>
-            <a className="btn btn-primary btn-xl btn-block" href="#/report">
-              {t('home.report')}
-            </a>
-          </Magnet>
+          <a className="btn btn-primary btn-xl btn-block" href="#/report">
+            {t('home.report')}
+          </a>
           <p className="btn-help">{t('home.reportHelp')}</p>
         </div>
         {mine > 0 && (
@@ -82,19 +78,9 @@ export default function Home({ onOpenDemo }) {
       <section className="home-picker">
         <h2>{t('home.pickerTitle')}</h2>
         <p>{open ? tn('home.openJobs', open) : t('home.noJobs')}</p>
-        <SpecularButton
-          className="home-picker-btn"
-          size="lg"
-          radius={8}
-          baseColor="#1d2126"
-          textColor="#ffc20e"
-          lineColor="#ffc20e"
-          tint="#ffc20e"
-          tintOpacity={0.05}
-          onClick={() => (location.hash = '#/picker')}
-        >
+        <a className="btn btn-outline btn-block" href="#/picker">
           {t('home.openDashboard')}
-        </SpecularButton>
+        </a>
       </section>
 
       <footer className="home-foot">

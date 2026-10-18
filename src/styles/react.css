@@ -55,23 +55,9 @@
   margin: 4px auto 16px;
 }
 
-/* The specular button fills the column like the other block buttons. */
-.home-picker-btn {
-  width: 100%;
-  min-height: 54px;
-  font-family: var(--font-display);
-  font-size: 20px;
-  font-weight: 700;
-}
-
 /* BlurText renders the headline as flex items with its own word spaces. */
 .home-title {
   margin: 0;
-}
-
-/* Magnet moves its inner box; the button inside should still fill the column. */
-.home-cta > div > div {
-  width: 100%;
 }
 
 /* CountUp renders inline slots; keep them on the parent's type. */
@@ -116,3 +102,84 @@
   }
 }
 
+
+/* The theme button follows its surface: dark ink on concrete, light on the picker console.
+   (.icon-btn alone is styled for the dark console, which hid the moon on light screens.) */
+.icon-btn.theme-btn {
+  border-color: var(--ink);
+  color: var(--ink);
+}
+
+.icon-btn.theme-btn-dark {
+  border-color: var(--line-dark);
+  color: var(--on-dark);
+}
+
+/* Open jobs: heading with the Cards / List switch beside it. */
+.open-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-right: 14px;
+}
+
+.view-toggle {
+  display: inline-flex;
+  flex: none;
+  padding: 2px;
+  border: 2px solid var(--line-dark);
+  border-radius: 999px;
+}
+
+.view-toggle button {
+  min-height: 34px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  color: var(--on-dark-2);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.view-toggle button[aria-pressed='true'] {
+  background: var(--yellow);
+  color: var(--on-accent);
+}
+
+/* The ring of job photos, and the job in front shown underneath it. */
+.job-ring {
+  height: 220px;
+  margin-top: 4px;
+}
+
+.ring-hint {
+  padding: 0 14px;
+  color: var(--on-dark-2);
+  font-size: 13px;
+  text-align: center;
+}
+
+.ring-detail {
+  display: grid;
+  gap: 8px;
+  margin: 12px 14px 0;
+  padding: 12px;
+  border: 1px solid var(--line-dark);
+  border-radius: var(--radius);
+  background: var(--asphalt-2);
+  animation: row-in 260ms var(--ease-out) both;
+}
+
+.ring-detail-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.ring-detail .job-why {
+  -webkit-line-clamp: 3;
+}

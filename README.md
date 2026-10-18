@@ -25,7 +25,8 @@ Works best on a phone, or a laptop browser narrowed to phone width. The camera n
    returns structured JSON: dry or wet, small/medium/large, what it sees, and one sentence of
    reasoning. A fixed formula turns those labels into a payout.
 3. **Notify.** *Report this spot* posts the job. Every simulated picker within 2 km can see it.
-4. **Accept.** On the picker dashboard, open jobs are sorted by distance from the selected picker.
+4. **Accept.** On the picker dashboard, open jobs are sorted by distance from the selected picker and
+   shown as a ring of photos (three or more jobs) or a list.
    *Accept job* moves it to *In progress*, shows a map of the spot with the 30 m proof circle drawn
    on it, and removes the job from every other picker's list. A picker who can't get there can
    *Give up this job* and it returns to the queue; a reporter can *Withdraw this report* while
@@ -201,25 +202,29 @@ passing or failing, a payout counting up. All of it switches off under `prefers-
 React 19 and Vite. The logic in `src/lib/` is plain JavaScript with no framework, so the proof
 checks, payout formula and state machine read the same as before the move to React.
 
-Eight components come from [React Bits](https://reactbits.dev). The rule for picking them: the main
+Seven components come from [React Bits](https://reactbits.dev). The rule for picking them: the main
 users are waste pickers on phones, so nothing that gets in the way, slows a cheap phone or needs
 explaining. Each one marks something that just happened or deserves attention:
 
 | Component | Where |
 |---|---|
-| Particles | Behind the home headline: slow scraps of litter in the bin colours tumbling down, faint behind the text |
+| CircularCarousel | The picker's open jobs as a ring of photos, nearest first; the job in front shows its payout, distance and Accept button underneath |
+| Particles | Behind the home headline: slow scraps of litter in the bin colours tumbling down and leaning after the cursor or a finger |
 | GlassIcons | The three "How it works" tiles (camera, sack, rupee), each a link to that step's screen |
 | BlurText | The home headline resolves word by word (replays when the language changes) |
-| Magnet | The "Report waste" button leans toward the pointer on a laptop |
-| SpecularButton | "Open picker dashboard": a dark glass button with a moving edge of light |
 | Counter | The picker's earnings and jobs done: odometer digits roll up when a payout lands |
 | CountUp | The receipt's payout (re-counts as you change the estimate), rewards, the released payout |
 | ShinyText | "Reported", "Cleanup verified" and "Payout released": one sweep of light when they appear |
 
-Considered and left out: carousels and galleries (pickers need a list they can scan, and there are
-no real photos to show yet), Glass Surface over the camera (WebGL on top of a live camera feed is
-too heavy for a cheap phone), and Grainient as the background (it read as grimy, the opposite of
-clean). The WebGL pieces pause when off-screen or in a background tab.
+The ring only appears with three or more open jobs; with fewer it would look empty, so the dashboard
+shows the plain list. A Cards / List switch beside the heading lets any picker who prefers the list
+keep it (the choice is remembered on the phone), and the ring has no autoplay, so a job never drifts
+away while someone is reading it.
+
+Considered and left out: button effects such as Magnet and Specular Button (people open this on a
+phone, where hover effects do nothing), Glass Surface over the camera (WebGL on top of a live camera
+feed is too heavy for a cheap phone), and Grainient as the background (it read as grimy, the opposite
+of clean). The WebGL pieces pause when off-screen or in a background tab.
 
 They live in `src/components/reactbits/` as copied source, which is how React Bits is meant to be
 used. One local change: BlurText takes an `as` prop so the headline stays an `<h1>`. React Bits is
@@ -258,7 +263,7 @@ src/
   hooks.js            useStore, useLanguage, useTheme, useNow, useHashPath
   views/              Home, Report, Reports, Picker, Proof, Job
   components/         SpotMap, Photo, WasteTags, LanguageMenu, ThemeButton, DemoControls, ...
-  components/reactbits/  Particles, GlassIcons, BlurText, Magnet, SpecularButton, Counter, CountUp, ShinyText
+  components/reactbits/  CircularCarousel, Particles, GlassIcons, BlurText, Counter, CountUp, ShinyText
   lib/                framework-free logic, unchanged by the React move:
     config.js         every tunable number (rates, radii, TTLs, hold window)
     store.js          job state machine, persistence, cross-tab sync

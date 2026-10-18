@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import DemoBadge from '../components/DemoBadge.jsx';
+import JobRing from '../components/JobRing.jsx';
 import LanguageMenu from '../components/LanguageMenu.jsx';
 import Photo from '../components/Photo.jsx';
 import Counter from '../components/reactbits/Counter/Counter.jsx';
@@ -28,6 +29,54 @@ import { clock, countdown, timeAgo } from '../lib/time.js';
 import { toast } from '../lib/toast.js';
 
 const NEW_FOR_MS = 5 * 60_000;
+// Fewer jobs than this look lonely on a ring, so they're shown as a list instead.
+const RING_MIN_JOBS = 3;
+const VIEW_KEY = 'safai-saathi:jobs-view';
+
+function readView() {
+  try {
+    return localStorage.getItem(VIEW_KEY) === 'list' ? 'list' : 'ring';
+  } catch {
+    return 'ring';
+  }
+}
+
+function ViewToggle({ view, onChange }) {
+  return (
+    <div className="view-toggle" role="group" aria-label={t('picker.view.label')}>
+      {['ring', 'list'].map((v) => (
+        <button key={v} type="button" aria-pressed={view === v} onClick={() => onChange(v)}>
+          {t(`picker.view.${v}`)}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// The job at the front of the ring: everything needed to decide, and the Accept button.
+function FocusedJob({ item, now, busy, onAccept }) {
+  const { job, distance } = item;
+  const fresh = now - job.createdAt < NEW_FOR_MS;
+  return (
+    <div className="ring-detail">
+      <div className="ring-detail-top">
+        <WasteTags analysis={job.analysis} sample={job.sample} isNew={fresh} />
+        <div className="job-right">
+          <span className="job-pay">{rupees(job.payout.picker)}</span>
+          <span className="job-dist mono">{formatDistance(distance)}</span>
+        </div>
+      </div>
+      <p className="job-why">{jobReasoning(job)}</p>
+      <p className="job-meta">
+        <span className="mono">{job.id}</span>
+        <span>{timeAgo(job.createdAt)}</span>
+      </p>
+      <button className="btn btn-primary btn-block" onClick={() => onAccept(job.id)} disabled={busy}>
+        {t('picker.accept')}
+      </button>
+    </div>
+  );
+}
 
 function ActiveJob({ job, me, highlight, markRef }) {
   const [confirming, setConfirming] = useState(false);
@@ -135,7 +184,19 @@ export default function Picker({ onOpenDemo }) {
   const s = useStore();
   const now = useNow(1000);
   const [justAccepted, setJustAccepted] = useState(null);
+  const [view, setView] = useState(readView);
+  const [focus, setFocus] = useState(0);
+  const [focusFor, setFocusFor] = useState('');
   const markRef = useRef(null);
+
+  function chooseView(next) {
+    setView(next);
+    try {
+      localStorage.setItem(VIEW_KEY, next);
+    } catch {
+      // Not remembering the choice is fine.
+    }
+  }
 
   // The first location read places the simulated pickers and sample jobs.
   useEffect(() => {
@@ -166,6 +227,17 @@ export default function Picker({ onOpenDemo }) {
   const active = activeJobFor(s, me.id);
   const open = openJobsFor(s, me);
   const money = earningsFor(s, me.id);
+  const ringable = open.length >= RING_MIN_JOBS;
+  const showRing = ringable && view === 'ring';
+  const focusIndex = Math.min(focus, Math.max(0, open.length - 1));
+  // When the set of jobs changes, the ring restarts at the nearest one so the card in front and
+  // the details underneath can't disagree.
+  const ringKey = open.map(({ job }) => job.id).join('|');
+  if (focusFor !== ringKey) {
+    // Adjusting state during render (React's documented pattern for resetting on a key change).
+    setFocusFor(ringKey);
+    setFocus(0);
+  }
 
   function accept(id) {
     try {
@@ -231,11 +303,26 @@ export default function Picker({ onOpenDemo }) {
       )}
 
       <section className="open-jobs" aria-labelledby="open-title">
-        <h2 className="section-label" id="open-title">
-          {t('picker.openJobs')} <span className="count">{open.length}</span>
-        </h2>
+        <div className="open-head">
+          <h2 className="section-label" id="open-title">
+            {t('picker.openJobs')} <span className="count">{open.length}</span>
+          </h2>
+          {ringable && <ViewToggle view={view} onChange={chooseView} />}
+        </div>
         {active && open.length > 0 && <p className="busy-note">{t('picker.busyNote')}</p>}
-        {open.length ? (
+        {showRing ? (
+          <>
+            <JobRing key={ringKey} jobs={open} onFocus={setFocus} />
+            <p className="ring-hint">{t('picker.ringHint')}</p>
+            <FocusedJob
+              key={open[focusIndex].job.id}
+              item={open[focusIndex]}
+              now={now}
+              busy={Boolean(active)}
+              onAccept={accept}
+            />
+          </>
+        ) : open.length ? (
           <ol className="jobs">
             {open.map(({ job, distance }, i) => {
               const fresh = now - job.createdAt < NEW_FOR_MS;

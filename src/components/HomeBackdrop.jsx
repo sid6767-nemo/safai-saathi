@@ -2,7 +2,8 @@ import { useTheme } from '../hooks.js';
 import Particles from './reactbits/Particles/Particles.jsx';
 
 // Slow scraps of litter in the bin and brand colours, tumbling down behind the home headline.
-// Particles pauses itself off-screen, in background tabs and under reduced motion.
+// They lean after the cursor or a finger (Particles listens on the window, so the backdrop itself
+// can ignore taps). It pauses itself off-screen, in background tabs and under reduced motion.
 const SCRAPS = ['#1e5bc6', '#1b7a43', '#ffc20e', '#ff7a1a', '#e8336d'];
 
 export default function HomeBackdrop() {
@@ -20,7 +21,7 @@ export default function HomeBackdrop() {
         driftSpeed={0.3}
         particleBaseSize={300}
         sizeRandomness={0.9}
-        moveParticlesOnHover={false}
+        moveParticlesOnHover
         clickBurst={false}
         glow={0}
         twinkle={0}
