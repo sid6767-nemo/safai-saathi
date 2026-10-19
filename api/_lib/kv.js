@@ -54,3 +54,7 @@ const memoryStore = {
 };
 
 export const store = REST_URL && REST_TOKEN ? upstashStore : process.env.SAFAI_MEMORY_STORE ? memoryStore : null;
+
+// The live site, preview deploys and local development share one database, so each gets its own
+// key prefix: testing on a laptop never touches the real job list.
+export const namespace = `safai-saathi:${process.env.VERCEL_ENV || 'dev'}`;

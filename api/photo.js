@@ -4,7 +4,7 @@
 // GET  /api/photo?id=<id>                                       -> the JPEG
 
 import { HttpError } from './_lib/errors.js';
-import { store } from './_lib/kv.js';
+import { namespace, store } from './_lib/kv.js';
 import { sendError } from './_lib/respond.js';
 
 const PHOTO_ID = /^(report|proof)-[a-z0-9]+-[a-z0-9]+$/;
@@ -12,7 +12,7 @@ const DATA_URL = /^data:image\/jpeg;base64,([A-Za-z0-9+/=]+)$/;
 const MAX_BASE64 = 900_000; // stays under the store's 1 MB request limit
 const KEEP_SECONDS = 60 * 24 * 3600;
 
-const key = (id) => `safai-saathi:photo:${id}`;
+const key = (id) => `${namespace}:photo:${id}`;
 
 function checkId(id) {
   if (!PHOTO_ID.test(String(id ?? ''))) throw new HttpError(400, 'bad_id', 'That is not a photo id.');

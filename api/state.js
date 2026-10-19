@@ -10,10 +10,10 @@
 import { randomUUID } from 'node:crypto';
 import { CONFIG } from '../src/lib/config.js';
 import { HttpError } from './_lib/errors.js';
-import { store } from './_lib/kv.js';
+import { namespace, store } from './_lib/kv.js';
 import { sendError } from './_lib/respond.js';
 
-const KEY = 'safai-saathi:state';
+const KEY = `${namespace}:state`;
 const MAX_JOBS_PER_SYNC = 50;
 const MAX_BODY_CHARS = 300_000;
 const JOB_ID = /^SS-[A-Z0-9]{3,6}$/;
