@@ -194,3 +194,12 @@
 .ring-detail .job-why {
   -webkit-line-clamp: 3;
 }
+
+/* Shown instead of the directions link once the phone is inside the proof circle. */
+.at-spot {
+  padding: 10px 12px;
+  border-left: 5px solid var(--verified-soft);
+  border-radius: 4px;
+  background: var(--asphalt-3);
+  font-size: 15px;
+}

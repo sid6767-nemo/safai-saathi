@@ -11,7 +11,7 @@ import ThemeButton from '../components/ThemeButton.jsx';
 import WasteTags from '../components/WasteTags.jsx';
 import { useNow, useStore, useTitle } from '../hooks.js';
 import { CONFIG } from '../lib/config.js';
-import { distanceM, formatCoords, formatDistance, getPosition } from '../lib/geo.js';
+import { distanceM, formatCoords, formatDistance, getPosition, watchPosition } from '../lib/geo.js';
 import { jobReasoning, t } from '../lib/i18n.js';
 import { rupees } from '../lib/payout.js';
 import {
@@ -78,9 +78,21 @@ function FocusedJob({ item, now, busy, onAccept }) {
   );
 }
 
+// The phone's own GPS, read live while a job is in progress (the dashboard's distances are from the
+// simulated picker, but directions start wherever the phone really is).
+function useHere() {
+  const [here, setHere] = useState(null);
+  useEffect(() => watchPosition(setHere, () => setHere(null)), []);
+  return here;
+}
+
 function ActiveJob({ job, me, highlight, markRef }) {
   const [confirming, setConfirming] = useState(false);
   const last = job.attempts.at(-1);
+  const here = useHere();
+  // Google Maps can't route to where you already stand, so inside the proof circle say so instead.
+  const gap = here ? distanceM(here, job) : null;
+  const atSpot = gap !== null && gap <= CONFIG.proofRadiusM;
 
   function giveUp() {
     setConfirming(false);
@@ -131,14 +143,20 @@ function ActiveJob({ job, me, highlight, markRef }) {
         {t('picker.markCleaned')}
       </a>
       <p className="btn-help">{t('picker.markCleanedHelp')}</p>
-      <a
-        className="btn btn-quiet btn-block"
-        target="_blank"
-        rel="noopener"
-        href={`https://www.google.com/maps/dir/?api=1&destination=${job.lat},${job.lng}&travelmode=walking`}
-      >
-        {t('picker.directions')}
-      </a>
+      {atSpot ? (
+        <p className="at-spot" role="status">
+          {t('picker.atSpot', { distance: formatDistance(gap) })}
+        </p>
+      ) : (
+        <a
+          className="btn btn-quiet btn-block"
+          target="_blank"
+          rel="noopener"
+          href={`https://www.google.com/maps/dir/?api=1&destination=${job.lat},${job.lng}&travelmode=walking`}
+        >
+          {t('picker.directions')}
+        </a>
+      )}
       {confirming ? (
         <div className="confirm-box" role="group">
           <p>{t('picker.giveUpNote')}</p>
