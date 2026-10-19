@@ -11,11 +11,17 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const PORT = Number(process.env.PORT) || 4173;
 const MAX_BODY_BYTES = 8 * 1024 * 1024;
 
-try {
-  process.loadEnvFile(join(root, '.env'));
-} catch {
-  // No .env: the API routes answer with a clear "no API key" error instead.
+for (const file of ['.env', '.env.local']) {
+  try {
+    process.loadEnvFile(join(root, file));
+  } catch {
+    // No such file: the API routes answer with a clear "not set up" error instead.
+  }
 }
+
+// Without Upstash keys, the shared job list lives in this process, so two browsers on this
+// machine still see the same jobs (api/_lib/kv.js).
+process.env.SAFAI_MEMORY_STORE ??= '1';
 
 function readBody(req) {
   return new Promise((resolve, reject) => {
@@ -50,6 +56,7 @@ async function handleApi(pathname, req, res) {
     return sendText(res, 404, 'Not found');
   }
 
+  req.query = Object.fromEntries(new URL(req.url, 'http://localhost').searchParams);
   res.status = (code) => {
     res.statusCode = code;
     return res;

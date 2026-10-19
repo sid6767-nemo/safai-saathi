@@ -3,6 +3,7 @@ import { useStore } from '../hooks.js';
 import { CONFIG } from '../lib/config.js';
 import { t } from '../lib/i18n.js';
 import { expireCodes, resetAll, setDemo, skipHolds } from '../lib/store.js';
+import { resetShared } from '../lib/sync.js';
 import { toast } from '../lib/toast.js';
 
 // Staged conditions so judges can trigger the fraud checks from a laptop that can't walk 150 m.
@@ -25,6 +26,7 @@ export default function DemoControls({ open, onClose }) {
 
   async function reset() {
     if (!confirm(t('demo.resetConfirm'))) return;
+    await resetShared();
     await resetAll();
     dialog.current.close();
     location.hash = '#/';

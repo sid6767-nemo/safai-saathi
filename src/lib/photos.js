@@ -40,7 +40,8 @@ export async function photoUrl(ref) {
   if (ref.startsWith('assets/')) return ref;
   if (urlCache.has(ref)) return urlCache.get(ref);
   const blob = await getPhoto(ref);
-  if (!blob) return '';
+  // Not on this device: another device took it, so read the shared copy.
+  if (!blob) return `/api/photo?id=${encodeURIComponent(ref)}`;
   const url = URL.createObjectURL(blob);
   urlCache.set(ref, url);
   return url;

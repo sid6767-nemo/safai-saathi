@@ -43,7 +43,7 @@ function Fallback({ point }) {
 }
 
 // Full screen, clear of the action buttons, with the walking route.
-function BigMap({ point, onClose }) {
+function BigMap({ point, autoWalk, onClose }) {
   const dialog = useRef(null);
   const canvas = useRef(null);
   const [status, setStatus] = useState('');
@@ -64,6 +64,12 @@ function BigMap({ point, onClose }) {
     setStatus(t('map.routeBusy'));
     setStatus(await walkFromHere(handle.current, point));
   }
+
+  // Opened from "Show the walk": draw the route as soon as the map is ready.
+  useEffect(() => {
+    if (autoWalk && mode === 'leaflet') showWalk();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoWalk, mode]);
 
   return (
     <dialog ref={dialog} className="map-dialog" onClose={onClose}>
@@ -102,14 +108,17 @@ export default function SpotMap({ lat, lng }) {
         <button
           type="button"
           className="map-expand"
-          onClick={() => setBig(true)}
+          onClick={() => setBig('view')}
           aria-label={t('map.expand')}
           title={t('map.expand')}
         >
           ⤢
         </button>
       </div>
-      {big && <BigMap point={point} onClose={() => setBig(false)} />}
+      <button type="button" className="btn btn-outline btn-block map-walk" onClick={() => setBig('walk')}>
+        {t('map.route')}
+      </button>
+      {big && <BigMap point={point} autoWalk={big === 'walk'} onClose={() => setBig(false)} />}
     </>
   );
 }

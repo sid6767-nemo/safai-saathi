@@ -20,6 +20,7 @@ const blank = () => ({
   anchor: null,
   pickers: [],
   activePickerId: 'p1',
+  epoch: null, // which shared job set this device follows (see lib/sync.js)
   jobs: [],
   demo: { spoofLocation: false, clockSkew: false, aiOffline: false },
 });
@@ -67,9 +68,16 @@ function emit() {
 }
 
 // Re-reads storage before every change so two tabs can't both accept the same job.
+// Every job that changes is stamped with the time, so when devices sync, the latest change wins.
 function commit(mutate) {
   state = load();
+  const before = new Map(state.jobs.map((j) => [j.id, JSON.stringify(j)]));
   const result = mutate(state);
+  const now = Date.now();
+  for (const job of state.jobs) {
+    const was = before.get(job.id);
+    if (was === undefined ? job.updatedAt === undefined : was !== JSON.stringify(job)) job.updatedAt = now;
+  }
   save();
   emit();
   return result;
@@ -138,6 +146,7 @@ export function ensureAnchor(point, source = 'gps') {
         accuracy: 10,
         locationSource: 'sample',
         createdAt: Date.now() - sample.minutesAgo * 60_000,
+        updatedAt: 0, // never edited here, so the shared copy of a sample always wins
         analysis: {
           wasteType: sample.wasteType,
           severity: sample.severity,
@@ -291,6 +300,29 @@ export function setActivePicker(id) {
   commit((s) => {
     s.activePickerId = id;
   });
+}
+
+// Folds the shared job list into this device's copy (lib/sync.js calls this). Each job keeps
+// whichever side changed it last. If the shared set was reset on another device, this device
+// drops its copy and follows the new one. The shared location wins, so every device places the
+// simulated pickers and sample jobs in the same spots.
+export function applyRemote(remote) {
+  const local = load();
+  const resetElsewhere = Boolean(local.epoch && remote.epoch && local.epoch !== remote.epoch);
+  let jobs = remote.jobs;
+  if (!resetElsewhere) {
+    const byId = new Map(local.jobs.map((j) => [j.id, j]));
+    for (const job of remote.jobs) {
+      const mine = byId.get(job.id);
+      if (!mine || (job.updatedAt ?? 0) >= (mine.updatedAt ?? 0)) byId.set(job.id, job);
+    }
+    jobs = [...byId.values()].sort((a, b) => b.createdAt - a.createdAt);
+  }
+  const anchor = remote.anchor ?? (resetElsewhere ? null : local.anchor);
+  state = { ...local, epoch: remote.epoch ?? local.epoch, anchor, pickers: anchor ? placePickers(anchor) : [], jobs };
+  retireSamples(state);
+  save();
+  emit();
 }
 
 export async function resetAll() {

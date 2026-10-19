@@ -1,6 +1,7 @@
 import { createRoot } from 'react-dom/client';
 import App from './App.jsx';
 import { initialLanguage, loadLanguage } from './lib/i18n.js';
+import { startSync } from './lib/sync.js';
 import { initTheme } from './lib/theme.js';
 import './styles/tokens.css';
 import './styles/base.css';
@@ -13,6 +14,7 @@ async function boot() {
   initTheme();
   await loadLanguage(initialLanguage());
   createRoot(document.getElementById('app')).render(<App />);
+  startSync();
 }
 
 boot();

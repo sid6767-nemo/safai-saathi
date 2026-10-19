@@ -139,7 +139,7 @@ export const strings = {
   'picker.accept': 'வேலையை ஏற்',
   'picker.markCleaned': 'சுத்தம் செய்துவிட்டேன்',
   'picker.markCleanedHelp': 'திரையில் உங்கள் குறியீட்டுடன் கேமரா திறக்கும்.',
-  'picker.directions': 'Google Maps இல் வழி',
+  'picker.directions': 'இடத்தை Google Maps இல் திற',
   'picker.atSpot': 'நீங்கள் அந்த இடத்திலேயே இருக்கிறீர்கள் (GPS படி {distance} தொலைவு), எனவே வழி காட்டத் தேவையில்லை. சுத்தமானதும் ஆதாரப் படம் எடுங்கள்.',
   'picker.finished': 'நீங்கள் முடித்த வேலைகள்',
   'picker.empty': 'இப்போது வேலை எதுவும் இல்லை. புதிய பதிவு வந்தவுடன் இங்கே தோன்றும்.',

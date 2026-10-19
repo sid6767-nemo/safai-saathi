@@ -144,7 +144,7 @@ export const strings = {
   'picker.accept': 'Accept job',
   'picker.markCleaned': 'Mark as cleaned',
   'picker.markCleanedHelp': 'Opens the camera with your job code on screen.',
-  'picker.directions': 'Directions in Google Maps',
+  'picker.directions': 'Open the spot in Google Maps',
   'picker.atSpot': 'You\'re at the spot ({distance} away by GPS), so there\'s no route to show. Take the proof photo once it\'s clean.',
   'picker.finished': 'Your finished jobs',
   'picker.empty': 'No open jobs right now. New reports show up here the moment they are made.',

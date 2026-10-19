@@ -90,7 +90,7 @@ function ActiveJob({ job, me, highlight, markRef }) {
   const [confirming, setConfirming] = useState(false);
   const last = job.attempts.at(-1);
   const here = useHere();
-  // Google Maps can't route to where you already stand, so inside the proof circle say so instead.
+  // Inside the proof circle there's nowhere to go, so say so instead of offering the map link.
   const gap = here ? distanceM(here, job) : null;
   const atSpot = gap !== null && gap <= CONFIG.proofRadiusM;
 
@@ -152,7 +152,7 @@ function ActiveJob({ job, me, highlight, markRef }) {
           className="btn btn-quiet btn-block"
           target="_blank"
           rel="noopener"
-          href={`https://www.google.com/maps/dir/?api=1&destination=${job.lat},${job.lng}&travelmode=walking`}
+          href={`https://www.google.com/maps/search/?api=1&query=${job.lat},${job.lng}`}
         >
           {t('picker.directions')}
         </a>

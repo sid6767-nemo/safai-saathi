@@ -139,7 +139,7 @@ export const strings = {
   'picker.accept': 'काम लें',
   'picker.markCleaned': 'साफ़ कर दिया',
   'picker.markCleanedHelp': 'कैमरा खुलेगा और स्क्रीन पर आपका कोड दिखेगा।',
-  'picker.directions': 'Google Maps में रास्ता',
+  'picker.directions': 'जगह Google Maps में खोलें',
   'picker.atSpot': 'आप जगह पर ही हैं (GPS से {distance} दूर), इसलिए रास्ता दिखाने को कुछ नहीं। साफ़ होने पर प्रूफ़ फ़ोटो लें।',
   'picker.finished': 'आपके पूरे हुए काम',
   'picker.empty': 'अभी कोई खुला काम नहीं। नई रिपोर्ट आते ही यहाँ दिखेगी।',

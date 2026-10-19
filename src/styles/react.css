@@ -18,9 +18,42 @@
   z-index: 1;
 }
 
+/* Full-screen map: the map takes whatever the bar leaves, and the bar grows to fit its text,
+   so nothing at the bottom is ever cut off on a small phone. */
+dialog.map-dialog[open] {
+  display: flex;
+  flex-direction: column;
+}
+
 .map-big-wrap {
   position: relative;
-  height: calc(100dvh - 92px);
+  flex: 1;
+  min-height: 0;
+}
+
+dialog.map-dialog .map-bar {
+  flex: none;
+  flex-wrap: wrap;
+  height: auto;
+  min-height: 72px;
+}
+
+dialog.map-dialog .map-status {
+  flex: 1 1 100%;
+}
+
+dialog.map-dialog .map-status:empty {
+  display: none;
+}
+
+/* The two buttons share one row under the status line. */
+dialog.map-dialog .map-bar .btn {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.map-walk {
+  margin-top: -4px;
 }
 
 .map-big-wrap .map-big {

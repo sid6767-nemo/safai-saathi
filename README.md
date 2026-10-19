@@ -111,6 +111,29 @@ holder to be 18 or older. On Gemini's free tier Google may use submitted photos 
 products, and human reviewers may see them, so keep people's faces and anything private out of
 demo photos.
 
+## Sharing jobs between devices
+
+Reports, jobs and photos are shared through two small API routes: `api/state.js` holds one list of
+every job, and `api/photo.js` holds the photos. Each device checks in every four seconds and right
+after any change. For each job the most recent change wins, a write only lands if nobody else wrote
+in between (so two pickers can't both take the same job), and "Reset demo data" resets every
+device. The first location ever sent fixes where the simulated pickers and sample jobs sit, so
+everyone sees them in the same place.
+
+The store is Upstash Redis, free tier, added to the Vercel project from the Marketplace:
+
+```bash
+vercel integration add upstash     # asks you to accept Upstash's terms, then links it to the project
+vercel deploy --prod
+```
+
+(or in the Vercel dashboard: the project, then **Storage**, then **Create Database**, then
+**Upstash for Redis**). That sets `KV_REST_API_URL` and `KV_REST_API_TOKEN`. Without it the app
+still works, but each device keeps its own jobs. `npm run dev` uses an in-memory store instead, so
+two browsers on the same machine share jobs while developing.
+
+This is prototype-grade: anyone with the link can add jobs, and there are no accounts.
+
 ## The map
 
 The spot is shown on a map inside the app, with a circle at the 30 m radius the proof photo has to
