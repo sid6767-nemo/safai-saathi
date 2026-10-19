@@ -49,7 +49,7 @@ Works best on a phone, or a laptop browser narrowed to phone width. The camera n
 | One-time job code, burned into the proof photo's pixels | Ward officer review after a flag or an AI outage |
 | Time, code-expiry and 30 m distance checks on the proof photo | Accounts: there's no login; "Working as" switches between the simulated pickers |
 | AI before/after comparison: reads the code, checks the spot is clear and that it's the same place | Storage: everything lives in this browser (localStorage + IndexedDB), no server database |
-| | Three sample jobs (tagged "Sample") with drawn placeholder photos |
+| | Three sample jobs (tagged "Sample") with drawn placeholder photos. Once five real reports exist, the samples nobody has taken are removed (`samplesUntilReports` in `src/lib/config.js`) |
 | | The job code is generated in the browser; production would issue it from the server |
 
 ## How a cleanup is verified

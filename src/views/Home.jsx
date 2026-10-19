@@ -57,6 +57,14 @@ export default function Home({ onOpenDemo }) {
         )}
       </section>
 
+      <section className="home-picker">
+        <h2>{t('home.pickerTitle')}</h2>
+        <p>{open ? tn('home.openJobs', open) : t('home.noJobs')}</p>
+        <a className="btn btn-outline btn-block" href="#/picker">
+          {t('home.openDashboard')}
+        </a>
+      </section>
+
       <section className="how" aria-labelledby="how-title">
         <h2 className="how-title" id="how-title">
           {t('home.how')}
@@ -73,14 +81,6 @@ export default function Home({ onOpenDemo }) {
             </li>
           ))}
         </ol>
-      </section>
-
-      <section className="home-picker">
-        <h2>{t('home.pickerTitle')}</h2>
-        <p>{open ? tn('home.openJobs', open) : t('home.noJobs')}</p>
-        <a className="btn btn-outline btn-block" href="#/picker">
-          {t('home.openDashboard')}
-        </a>
       </section>
 
       <footer className="home-foot">

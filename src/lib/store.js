@@ -24,6 +24,13 @@ const blank = () => ({
   demo: { spoofLocation: false, clockSkew: false, aiOffline: false },
 });
 
+// Once enough real reports exist they are the examples, so sample jobs nobody has taken go away.
+// Samples a picker already accepted stay, so a job in progress or its payout never vanishes.
+function retireSamples(s) {
+  const real = s.jobs.filter((j) => !j.sample && j.status !== 'cancelled').length;
+  if (real >= CONFIG.samplesUntilReports) s.jobs = s.jobs.filter((j) => !(j.sample && j.status === 'open'));
+}
+
 function load() {
   try {
     const raw = localStorage.getItem(KEY);
@@ -35,7 +42,9 @@ function load() {
           job.analysis.reasoningKey = SAMPLE_JOBS.find((s) => s.id === job.id)?.reasoningKey;
         }
       }
-      return { ...blank(), ...saved, demo: { ...blank().demo, ...saved.demo } };
+      const loaded = { ...blank(), ...saved, demo: { ...blank().demo, ...saved.demo } };
+      retireSamples(loaded);
+      return loaded;
     }
   } catch {
     // Corrupt or blocked storage: start fresh rather than break the demo.
@@ -163,6 +172,7 @@ export function createReport({ fix, locationSource, photo, analysis }) {
     });
     job.notified = pickersNear(s, job);
     s.jobs.unshift(job);
+    retireSamples(s);
     return job;
   });
 }
