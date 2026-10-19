@@ -7,17 +7,17 @@ import CountUp from '../components/reactbits/CountUp/CountUp.jsx';
 import WasteTags from '../components/WasteTags.jsx';
 import { useNow, useStore, useTitle } from '../hooks.js';
 import { CONFIG } from '../lib/config.js';
-import { t, tn } from '../lib/i18n.js';
+import { t } from '../lib/i18n.js';
 import { rupees } from '../lib/payout.js';
-import { JobError, flagJob, pickerName, withdrawReport } from '../lib/store.js';
+import { JobError, flagJob, withdrawReport } from '../lib/store.js';
 import { clock, countdown, timeAgo } from '../lib/time.js';
 import { toast } from '../lib/toast.js';
 
 function statusLine(s, job, now) {
-  const name = pickerName(s, job.acceptedBy);
+  const name = job.acceptedByName || t('reports.aPicker');
   switch (job.status) {
     case 'open':
-      return tn('reports.status.open', job.notified);
+      return t('reports.status.open');
     case 'accepted':
       return t('reports.status.accepted', { name, time: clock(job.acceptedAt) });
     case 'review':
@@ -86,7 +86,7 @@ export default function Reports() {
   const now = useNow(1000);
   const [confirming, setConfirming] = useState(null);
 
-  const mine = s.jobs.filter((j) => !j.sample);
+  const mine = s.jobs;
   const earned = mine.filter((j) => j.status === 'released').reduce((sum, j) => sum + j.payout.reporter, 0);
   const pending = mine
     .filter((j) => !['released', 'disputed', 'cancelled'].includes(j.status))

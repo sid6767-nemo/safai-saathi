@@ -19,7 +19,7 @@ const STEPS = [
   },
   {
     id: 'clear',
-    href: '#/picker',
+    href: '#/reports',
     color: 'linear-gradient(135deg, #ffa25c, #ff7a1a)',
     d: 'M9 3h6l-1 3h-4L9 3Zm1 4h4c3 2 5 5 5 8.5C19 19 16 21 12 21s-7-2-7-5.5C5 12 7 9 10 7Z',
   },

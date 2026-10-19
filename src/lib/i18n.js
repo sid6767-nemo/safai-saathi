@@ -56,9 +56,6 @@ export function t(key, vars) {
   return fill(strings[key] ?? en[key] ?? key, vars);
 }
 
-// Sample jobs carry a translation key; real reports carry whatever the AI wrote.
-export const jobReasoning = (job) =>
-  job.analysis.reasoningKey ? t(job.analysis.reasoningKey) : job.analysis.reasoning;
 
 // Counted strings use `<key>.one` and `<key>.other`, which covers all four languages here.
 export function tn(key, count, vars) {

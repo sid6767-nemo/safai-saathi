@@ -6,8 +6,6 @@ export const CONFIG = {
   roundTo: 5,
   reporterShare: 1 / 20,
 
-  notifyRadiusM: 2000, // pickers within this distance are sent a new job
-  samplesUntilReports: 5, // the sample jobs step aside once this many real reports exist
   proofRadiusM: 30, // the proof photo must be taken this close to the reported spot
   maxFixAgeMs: 15_000, // a GPS fix older than this is read again before it's used
   codeTtlMin: 10, // how long a one-time job code stays valid

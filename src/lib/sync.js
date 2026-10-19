@@ -92,14 +92,13 @@ async function push() {
     const theirs = seen.get(job.id);
     return !theirs || (job.updatedAt ?? 0) > (theirs.updatedAt ?? 0);
   });
-  const sendAnchor = !remote?.anchor && s.anchor;
   const ready = [];
   for (const job of changed) if (await uploadPhotos(job)) ready.push(job);
-  if (!ready.length && !sendAnchor) return;
+  if (!ready.length) return;
   const res = await fetch('/api/state', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ epoch: s.epoch, anchor: sendAnchor ? s.anchor : undefined, jobs: ready }),
+    body: JSON.stringify({ epoch: s.epoch, jobs: ready }),
   });
   if (res.ok || res.status === 409) take(await res.json());
 }

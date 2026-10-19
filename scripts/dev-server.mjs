@@ -77,7 +77,7 @@ async function handleApi(pathname, req, res) {
 }
 
 const server = http.createServer();
-const vite = await createVite({ root, appType: 'spa', server: { middlewareMode: true, hmr: { server } } });
+const vite = await createVite({ root, appType: 'mpa', server: { middlewareMode: true, hmr: { server } } });
 
 server.on('request', async (req, res) => {
   const { pathname } = new URL(req.url, 'http://localhost');

@@ -12,7 +12,7 @@ import { cssVar } from '../lib/css.js';
 import { formatCoords, getPosition, offsetM, watchPosition } from '../lib/geo.js';
 import { t } from '../lib/i18n.js';
 import { newPhotoId, putPhoto } from '../lib/photos.js';
-import { activePicker, ensureCode, getState, markReview, markVerified, recordAttempt } from '../lib/store.js';
+import { ensureCode, getState, markReview, markVerified, recordAttempt } from '../lib/store.js';
 import { countdown, pause, stamp } from '../lib/time.js';
 import { CHECKS, aiChecks, checkLabel, localChecks, noLocationRejection } from '../lib/verify.js';
 
@@ -23,7 +23,7 @@ function NotYours() {
     <main className="notice">
       <h1>{t('proof.notYours.title')}</h1>
       <p>{t('proof.notYours.body')}</p>
-      <a className="btn btn-primary btn-block" href="#/picker">
+      <a className="btn btn-primary btn-block" href="#/">
         {t('nav.backToJobs')}
       </a>
     </main>
@@ -247,7 +247,7 @@ function ProofCamera({ jobId }) {
               <button className="btn btn-primary btn-block" onClick={retake} autoFocus>
                 {t('action.tryAgain')}
               </button>
-              <a className="btn btn-quiet btn-block" href="#/picker">
+              <a className="btn btn-quiet btn-block" href="#/">
                 {t('nav.backToJobs')}
               </a>
             </div>
@@ -298,7 +298,7 @@ function ProofCamera({ jobId }) {
               <button className="btn btn-primary btn-block" onClick={retake} autoFocus>
                 {t('proof.take')}
               </button>
-              <a className="btn btn-quiet btn-block" href="#/picker">
+              <a className="btn btn-quiet btn-block" href="#/">
                 {t('nav.backToJobs')}
               </a>
             </div>
@@ -318,7 +318,7 @@ function ProofCamera({ jobId }) {
       <video ref={video} className="cam-feed" playsInline muted aria-label="Live camera" hidden={Boolean(frozen)} />
       {frozen && <img className="cam-frozen" src={frozen} alt="" />}
       <div className="cam-top">
-        <a className="cam-close" href="#/picker" aria-label={t('proof.close')}>
+        <a className="cam-close" href="#/" aria-label={t('proof.close')}>
           ✕
         </a>
         {live && (
@@ -347,14 +347,14 @@ function ProofCamera({ jobId }) {
   );
 }
 
-export default function Proof({ param: jobId }) {
+export default function Proof({ param: jobId, profile }) {
   useTitle(`${t('proof.title')} – Safai Saathi`);
   const s = useStore();
   // Decided once when the screen opens: verifying changes the job's status, and the checklist
   // must stay on screen while that happens.
   const [allowed] = useState(() => {
     const job = s.jobs.find((j) => j.id === jobId);
-    return job?.status === 'accepted' && job.acceptedBy === activePicker(s)?.id;
+    return job?.status === 'accepted' && job.acceptedBy === profile?.id;
   });
   return allowed ? <ProofCamera jobId={jobId} /> : <NotYours />;
 }

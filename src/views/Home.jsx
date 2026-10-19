@@ -4,15 +4,14 @@ import BlurText from '../components/reactbits/BlurText/BlurText.jsx';
 import StepIcons from '../components/StepIcons.jsx';
 import ThemeButton from '../components/ThemeButton.jsx';
 import { useStore, useTitle } from '../hooks.js';
-import { language, t, tn } from '../lib/i18n.js';
+import { language, t } from '../lib/i18n.js';
 
 const STEPS = [1, 2, 3];
 
 export default function Home({ onOpenDemo }) {
   useTitle('Safai Saathi');
   const { jobs } = useStore();
-  const open = jobs.filter((j) => j.status === 'open').length;
-  const mine = jobs.filter((j) => !j.sample).length;
+  const mine = jobs.length;
 
   return (
     <main className="home">
@@ -55,14 +54,6 @@ export default function Home({ onOpenDemo }) {
             {t('home.myReports', { count: mine })}
           </a>
         )}
-      </section>
-
-      <section className="home-picker">
-        <h2>{t('home.pickerTitle')}</h2>
-        <p>{open ? tn('home.openJobs', open) : t('home.noJobs')}</p>
-        <a className="btn btn-outline btn-block" href="#/picker">
-          {t('home.openDashboard')}
-        </a>
       </section>
 
       <section className="how" aria-labelledby="how-title">

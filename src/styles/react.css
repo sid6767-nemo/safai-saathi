@@ -236,3 +236,119 @@ dialog.map-dialog .map-bar .btn {
   background: var(--asphalt-3);
   font-size: 15px;
 }
+
+/* Picker app: first-run setup. Big targets, one decision per screen. */
+.setup {
+  display: grid;
+  align-content: start;
+  gap: 18px;
+  min-height: 100dvh;
+  padding: 32px 20px calc(24px + env(safe-area-inset-bottom));
+}
+
+.setup-mark {
+  color: var(--yellow);
+  font-family: var(--font-deva);
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.setup-title {
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 800;
+  line-height: var(--display-line, 1.1);
+}
+
+.setup-langs {
+  display: grid;
+  gap: 12px;
+}
+
+.setup-lang {
+  min-height: 72px;
+  border: 2px solid var(--line-dark);
+  border-radius: var(--radius);
+  background: var(--asphalt-2);
+  color: var(--on-dark);
+  font-size: 26px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.setup-lang:active {
+  background: var(--yellow);
+  color: var(--on-accent);
+}
+
+.setup-form {
+  display: grid;
+  gap: 14px;
+}
+
+.setup-why {
+  color: var(--on-dark-2);
+  font-size: 16px;
+}
+
+.setup-input {
+  min-height: 60px;
+  padding: 0 14px;
+  border: 2px solid var(--line-dark);
+  border-radius: var(--radius);
+  background: var(--asphalt-2);
+  color: var(--on-dark);
+  font-size: 22px;
+}
+
+.setup-input:focus {
+  border-color: var(--yellow);
+  outline: none;
+}
+
+/* Header: the logo is a button (five taps open the demo controls), the name opens setup again. */
+.wm-button {
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.who-name {
+  min-width: 0;
+  max-width: 45%;
+  min-height: 38px;
+  margin-left: auto;
+  padding: 0 12px;
+  overflow: hidden;
+  border: 2px solid var(--line-dark);
+  border-radius: 999px;
+  background: var(--asphalt-2);
+  color: var(--on-dark);
+  font-size: 15px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.locating {
+  margin: 10px 14px 0;
+  padding: 8px 12px;
+  border-left: 5px solid var(--info-soft);
+  border-radius: 4px;
+  background: var(--asphalt-2);
+  color: var(--on-dark-2);
+  font-size: 14px;
+}
+
+/* Shown when Chrome offers to install the app. */
+.install-banner {
+  display: grid;
+  gap: 10px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--line-dark);
+  background: var(--asphalt-2);
+  color: var(--on-dark);
+  font-size: 15px;
+}

@@ -1,54 +1,39 @@
-// All app state: the job state machine, persisted to localStorage and kept in sync across tabs
-// (a second tab can play a second picker during a demo).
+// All app state: the job state machine, persisted to localStorage, kept in sync across tabs, and
+// shared with every other device through lib/sync.js. The website (reporters) and the picker app
+// read and write the same jobs.
 //
 // Job lifecycle:  open -> accepted -> verified_hold -> released
 //                                  -> review      (AI check unavailable; a person decides)
 //                    verified_hold -> disputed    (reporter flagged it during the hold)
+//                    open          -> cancelled   (reporter withdrew it)
 // Failed proof attempts are logged on job.attempts; the job stays "accepted" so the picker can retry.
 
 import { CONFIG } from './config.js';
-import { distanceM, offsetM } from './geo.js';
+import { distanceM } from './geo.js';
 import { estimatePayout } from './payout.js';
 import { clearPhotos } from './photos.js';
-import { placePickers } from './pickers.js';
-import { SAMPLE_JOBS } from './seed.js';
 
 const KEY = 'safai-saathi:v1';
 const listeners = new Set();
 
 const blank = () => ({
-  anchor: null,
-  pickers: [],
-  activePickerId: 'p1',
   epoch: null, // which shared job set this device follows (see lib/sync.js)
   jobs: [],
   demo: { spoofLocation: false, clockSkew: false, aiOffline: false },
 });
 
-// Once enough real reports exist they are the examples, so sample jobs nobody has taken go away.
-// Samples a picker already accepted stay, so a job in progress or its payout never vanishes.
-function retireSamples(s) {
-  const real = s.jobs.filter((j) => !j.sample && j.status !== 'cancelled').length;
-  if (real >= CONFIG.samplesUntilReports) s.jobs = s.jobs.filter((j) => !(j.sample && j.status === 'open'));
-}
+// The demo build had drawn sample jobs; real ones only from here on.
+const realJobs = (jobs) => (jobs ?? []).filter((j) => !j.sample);
 
 function load() {
   try {
     const raw = localStorage.getItem(KEY);
     if (raw) {
       const saved = JSON.parse(raw);
-      // Sample jobs saved before their text was translatable: attach the key now.
-      for (const job of saved.jobs ?? []) {
-        if (job.sample && !job.analysis.reasoningKey) {
-          job.analysis.reasoningKey = SAMPLE_JOBS.find((s) => s.id === job.id)?.reasoningKey;
-        }
-      }
-      const loaded = { ...blank(), ...saved, demo: { ...blank().demo, ...saved.demo } };
-      retireSamples(loaded);
-      return loaded;
+      return { ...blank(), epoch: saved.epoch ?? null, jobs: realJobs(saved.jobs), demo: { ...blank().demo, ...saved.demo } };
     }
   } catch {
-    // Corrupt or blocked storage: start fresh rather than break the demo.
+    // Corrupt or blocked storage: start fresh rather than break the app.
   }
   return blank();
 }
@@ -67,8 +52,8 @@ function emit() {
   for (const fn of [...listeners]) fn(state);
 }
 
-// Re-reads storage before every change so two tabs can't both accept the same job.
-// Every job that changes is stamped with the time, so when devices sync, the latest change wins.
+// Re-reads storage before every change so two tabs can't both accept the same job. Every job that
+// changes is stamped with the time, so when devices sync, the latest change wins.
 function commit(mutate) {
   state = load();
   const before = new Map(state.jobs.map((j) => [j.id, JSON.stringify(j)]));
@@ -117,60 +102,20 @@ function findJob(s, id) {
   return job;
 }
 
-const pickersNear = (s, point) => s.pickers.filter((p) => distanceM(p, point) <= CONFIG.notifyRadiusM).length;
-
-const newJob = (fields) => ({
-  status: 'open',
-  createdAt: Date.now(),
-  acceptedBy: null,
-  acceptedAt: null,
-  proof: null,
-  attempts: [],
-  ...fields,
-});
-
-// The first location the app reads fixes where the simulated pickers and sample jobs sit.
-export function ensureAnchor(point, source = 'gps') {
-  if (state.anchor) return;
-  commit((s) => {
-    if (s.anchor) return;
-    s.anchor = { lat: point.lat, lng: point.lng, source };
-    s.pickers = placePickers(s.anchor);
-    for (const sample of SAMPLE_JOBS) {
-      const job = newJob({
-        id: sample.id,
-        sample: true,
-        illustration: sample.illustration,
-        photo: sample.photo,
-        ...offsetM(s.anchor, sample.north, sample.east),
-        accuracy: 10,
-        locationSource: 'sample',
-        createdAt: Date.now() - sample.minutesAgo * 60_000,
-        updatedAt: 0, // never edited here, so the shared copy of a sample always wins
-        analysis: {
-          wasteType: sample.wasteType,
-          severity: sample.severity,
-          itemsSeen: sample.itemsSeen,
-          reasoningKey: sample.reasoningKey,
-          source: 'sample',
-        },
-        payout: estimatePayout(sample.wasteType, sample.severity),
-      });
-      job.notified = pickersNear(s, job);
-      s.jobs.push(job);
-    }
-  });
-}
-
 export function createReport({ fix, locationSource, photo, analysis }) {
-  ensureAnchor(fix, locationSource);
   return commit((s) => {
     let id;
     do id = `SS-${randomCode(4)}`;
     while (s.jobs.some((j) => j.id === id));
-    const job = newJob({
+    const job = {
       id,
-      sample: false,
+      status: 'open',
+      createdAt: Date.now(),
+      acceptedBy: null,
+      acceptedByName: null,
+      acceptedAt: null,
+      proof: null,
+      attempts: [],
       photo,
       lat: fix.lat,
       lng: fix.lng,
@@ -178,22 +123,21 @@ export function createReport({ fix, locationSource, photo, analysis }) {
       locationSource,
       analysis,
       payout: estimatePayout(analysis.wasteType, analysis.severity),
-    });
-    job.notified = pickersNear(s, job);
+    };
     s.jobs.unshift(job);
-    retireSamples(s);
     return job;
   });
 }
 
-export function acceptJob(id, pickerId) {
+// `picker` is the picker app's profile: { id, name }. The name is what the reporter sees.
+export function acceptJob(id, picker) {
   return commit((s) => {
     const job = findJob(s, id);
     if (job.status !== 'open') throw new JobError('taken', 'Another picker accepted this job a moment ago.');
-    if (s.jobs.some((j) => j.acceptedBy === pickerId && j.status === 'accepted')) {
+    if (s.jobs.some((j) => j.acceptedBy === picker.id && j.status === 'accepted')) {
       throw new JobError('busy', 'Finish your current job before accepting another.');
     }
-    Object.assign(job, { status: 'accepted', acceptedBy: pickerId, acceptedAt: Date.now() });
+    Object.assign(job, { status: 'accepted', acceptedBy: picker.id, acceptedByName: picker.name, acceptedAt: Date.now() });
     return job;
   });
 }
@@ -208,6 +152,7 @@ export function cancelJob(id, pickerId) {
     Object.assign(job, {
       status: 'open',
       acceptedBy: null,
+      acceptedByName: null,
       acceptedAt: null,
       proof: null,
       attempts: [],
@@ -296,31 +241,22 @@ export function setDemo(patch) {
   commit((s) => Object.assign(s.demo, patch));
 }
 
-export function setActivePicker(id) {
-  commit((s) => {
-    s.activePickerId = id;
-  });
-}
-
 // Folds the shared job list into this device's copy (lib/sync.js calls this). Each job keeps
 // whichever side changed it last. If the shared set was reset on another device, this device
-// drops its copy and follows the new one. The shared location wins, so every device places the
-// simulated pickers and sample jobs in the same spots.
+// drops its copy and follows the new one.
 export function applyRemote(remote) {
   const local = load();
   const resetElsewhere = Boolean(local.epoch && remote.epoch && local.epoch !== remote.epoch);
-  let jobs = remote.jobs;
+  let jobs = realJobs(remote.jobs);
   if (!resetElsewhere) {
     const byId = new Map(local.jobs.map((j) => [j.id, j]));
-    for (const job of remote.jobs) {
+    for (const job of jobs) {
       const mine = byId.get(job.id);
       if (!mine || (job.updatedAt ?? 0) >= (mine.updatedAt ?? 0)) byId.set(job.id, job);
     }
     jobs = [...byId.values()].sort((a, b) => b.createdAt - a.createdAt);
   }
-  const anchor = remote.anchor ?? (resetElsewhere ? null : local.anchor);
-  state = { ...local, epoch: remote.epoch ?? local.epoch, anchor, pickers: anchor ? placePickers(anchor) : [], jobs };
-  retireSamples(state);
+  state = { ...local, epoch: remote.epoch ?? local.epoch, jobs };
   save();
   emit();
 }
@@ -334,15 +270,14 @@ export async function resetAll() {
 }
 
 // Selectors
-export const activePicker = (s) => s.pickers.find((p) => p.id === s.activePickerId) ?? s.pickers[0];
-export const pickerName = (s, id) => s.pickers.find((p) => p.id === id)?.name ?? 'A picker';
 export const activeJobFor = (s, pickerId) => s.jobs.find((j) => j.acceptedBy === pickerId && j.status === 'accepted');
 
-export function openJobsFor(s, picker) {
+// Nearest first once the phone knows where it is; newest first until then.
+export function openJobsFor(s, here) {
   return s.jobs
     .filter((j) => j.status === 'open')
-    .map((job) => ({ job, distance: distanceM(picker, job) }))
-    .sort((a, b) => a.distance - b.distance);
+    .map((job) => ({ job, distance: here ? distanceM(here, job) : null }))
+    .sort((a, b) => (a.distance ?? Infinity) - (b.distance ?? Infinity) || b.job.createdAt - a.job.createdAt);
 }
 
 const HELD = ['verified_hold', 'review', 'disputed'];

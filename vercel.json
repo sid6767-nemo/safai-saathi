@@ -17,5 +17,12 @@
         }
       ]
     }
+  ],
+  "redirects": [
+    {
+      "source": "/picker",
+      "destination": "/picker/",
+      "permanent": false
+    }
   ]
 }

@@ -10,7 +10,7 @@ import { CameraError, canvasToBlob, grabFrame, scaledDataUrl, stampPhoto, startC
 import { CONFIG } from '../lib/config.js';
 import { cssVar } from '../lib/css.js';
 import { formatCoords, getPosition, watchPosition } from '../lib/geo.js';
-import { t, tn } from '../lib/i18n.js';
+import { t } from '../lib/i18n.js';
 import { estimatePayout, rupees, sizeLabel, wasteLabel } from '../lib/payout.js';
 import { newPhotoId, putPhoto } from '../lib/photos.js';
 import { createReport } from '../lib/store.js';
@@ -382,7 +382,7 @@ export default function Report() {
           <div className="sheet sheet-done" role="status">
             <h2 className="sheet-title">
               <ShinyText
-                text={tn('report.done.title', job.notified)}
+                text={t('report.done.title')}
                 color={cssVar('--ink', '#14161a')}
                 shineColor={cssVar('--verified', '#24b26b')}
                 speed={1.6}
@@ -413,9 +413,6 @@ export default function Report() {
               </button>
               <a className="btn btn-outline btn-block" href="#/reports">
                 {t('report.myReports')}
-              </a>
-              <a className="btn btn-quiet btn-block" href="#/picker">
-                {t('home.openDashboard')}
               </a>
             </div>
           </div>

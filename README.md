@@ -3,8 +3,8 @@
 **Photograph a garbage spot. A local waste picker gets paid to clear it.**
 
 Safai Saathi ("cleanliness companion") is an Uber-style marketplace prototype. Citizens report litter
-and dumps with a live photo. An AI vision model sorts the waste and sizes the job, and nearby informal
-waste pickers see it on a job board with the payout up front. Payment is released (in this prototype,
+and dumps with a live photo on the website. An AI vision model sorts the waste and sizes the job, and
+informal waste pickers see it in their own app, on a job board with the payout up front. Payment is released (in this prototype,
 simulated) only after a live, code-stamped, GPS-checked proof photo passes verification.
 
 > **This is a prototype built for a school STEM competition pitch, not a production system.**
@@ -24,9 +24,9 @@ Works best on a phone, or a laptop browser narrowed to phone width. The camera n
    tier by default, or Claude `claude-sonnet-4-6`; see [Choosing the AI](#choosing-the-ai)), which
    returns structured JSON: dry or wet, small/medium/large, what it sees, and one sentence of
    reasoning. A fixed formula turns those labels into a payout.
-3. **Notify.** *Report this spot* posts the job. Every simulated picker within 2 km can see it.
-4. **Accept.** On the picker dashboard, open jobs are sorted by distance from the selected picker and
-   shown as a ring of photos (three or more jobs) or a list.
+3. **Notify.** *Report this spot* posts the job to the shared list. Every picker app shows it within seconds.
+4. **Accept.** In the picker app, open jobs are sorted by distance from the picker's phone and shown
+   as a ring of photos (three or more jobs) or a list.
    *Accept job* moves it to *In progress*, shows a map of the spot with the 30 m proof circle drawn
    on it, and removes the job from every other picker's list. A picker who can't get there can
    *Give up this job* and it returns to the queue; a reporter can *Withdraw this report* while
@@ -42,14 +42,13 @@ Works best on a phone, or a laptop browser narrowed to phone width. The camera n
 | Real in this prototype | Simulated |
 |---|---|
 | Four languages with a live switcher; the AI replies in the chosen one | The Hindi, Tamil and Kannada wording is machine-translated and unchecked |
-| Live camera capture through `getUserMedia`; no file or gallery input exists anywhere (`npm run check` fails the build if one appears) | The 9 waste pickers: fixed positions placed around the first location the app reads |
-| GPS through the Geolocation API, read at the moment of capture | Notifications: "sent to N pickers" is a distance count, not a push message or SMS |
+| Live camera capture through `getUserMedia`; no file or gallery input exists anywhere (`npm run check` fails the build if one appears) | Picker identity: a name typed once on the phone, with no accounts or verification yet |
+| GPS through the Geolocation API, read at the moment of capture | Notifications: pickers see new jobs while the app is open; there are no push messages or SMS yet |
 | AI vision analysis of the report photo (Gemini or Claude), returned as schema-checked JSON | Payments: no money moves; "ward cleanup fund" is a label |
 | Payout formula (rule-based, documented below) | The 24-hour hold: a real timer, but it can be skipped in Demo controls |
 | One-time job code, burned into the proof photo's pixels | Ward officer review after a flag or an AI outage |
-| Time, code-expiry and 30 m distance checks on the proof photo | Accounts: there's no login; "Working as" switches between the simulated pickers |
+| Time, code-expiry and 30 m distance checks on the proof photo | Access: the picker app is a separate address, not locked to pickers yet |
 | AI before/after comparison: reads the code, checks the spot is clear and that it's the same place | Storage: a shared job list in Upstash Redis once connected (see below), otherwise this browser only; no accounts, so anyone with the link can add jobs |
-| | Three sample jobs (tagged "Sample") with drawn placeholder photos. Once five real reports exist, the samples nobody has taken are removed (`samplesUntilReports` in `src/lib/config.js`) |
 | | The job code is generated in the browser; production would issue it from the server |
 
 ## How a cleanup is verified
@@ -111,14 +110,33 @@ holder to be 18 or older. On Gemini's free tier Google may use submitted photos 
 products, and human reviewers may see them, so keep people's faces and anything private out of
 demo photos.
 
+## Two apps, one job list
+
+| | Who | Address | What it does |
+|---|---|---|---|
+| **Website** | People reporting garbage | `/` | Report a spot, see what happened to your reports, flag a bad cleanup |
+| **Picker app** | Waste pickers | `/picker/` | See jobs nearby, accept one, take the proof photo, see earnings |
+
+The picker app is an installable web app (a PWA): on Android, open the address in Chrome and tap
+**Install the app** (or Chrome's menu, then **Install app**). It then has its own icon, opens full
+screen without the browser, and keeps working on a weak connection. On first launch it asks for the
+language (Kannada, Tamil, Hindi or English) and the picker's name, once; distances come from the
+phone's GPS. The website has no link to it, and the demo controls inside it open only after five taps
+on the logo, so pickers don't stumble into them. It is not locked to pickers yet.
+
+For the Play Store, the same app can be wrapped as an Android app without rewriting it (a "Trusted
+Web Activity", for example with [Bubblewrap](https://github.com/GoogleChromeLabs/bubblewrap) or
+[PWABuilder](https://www.pwabuilder.com)). That needs a Google Play developer account (a one-time
+$25, held by someone 18 or older) and, for a new personal account, a 14-day closed test with at least
+12 testers before it can go public.
+
 ## Sharing jobs between devices
 
 Reports, jobs and photos are shared through two small API routes: `api/state.js` holds one list of
 every job, and `api/photo.js` holds the photos. Each device checks in every four seconds and right
 after any change. For each job the most recent change wins, a write only lands if nobody else wrote
 in between (so two pickers can't both take the same job), and "Reset demo data" resets every
-device. The first location ever sent fixes where the simulated pickers and sample jobs sit, so
-everyone sees them in the same place.
+device.
 
 The store is Upstash Redis, free tier, added to the Vercel project from the Marketplace:
 
@@ -157,7 +175,8 @@ no choice saved the app follows the phone's own setting. Only the four surface t
 
 ## Demo controls
 
-Open with the gear on the picker dashboard, the link on the home screen, or **Shift+D**. A red strip
+Open with the link at the bottom of the website, by tapping the logo in the picker app five times, or
+**Shift+D**. A red strip
 appears on screen whenever one of these is on, so a recording never passes one off as real.
 
 - **Pretend I'm 150 m from the spot**: shifts the proof photo's GPS, to trigger the distance rejection.
@@ -269,13 +288,6 @@ English is the fallback at runtime for anything still missing.
 > native speaker.** Get someone who speaks the language to read them before the pitch; each file
 > says so at the top.
 
-## Swapping the sample jobs for real ones
-
-The three sample jobs are defined in [`src/lib/seed.js`](src/lib/seed.js). To use real photos:
-put JPEGs in `public/assets/samples/`, point each job's `photo` at them, set `illustration: false`
-(so the same-place check runs), and update the labels to match the photos. Sample jobs sit hundreds
-of metres from the anchor point, so their proof photos fail the 30 m check unless you are really there.
-
 ## Project structure
 
 ```
@@ -284,7 +296,8 @@ src/
   main.jsx            applies theme and language, then mounts <App>
   App.jsx             hash router, demo controls, toasts
   hooks.js            useStore, useLanguage, useTheme, useNow, useHashPath
-  views/              Home, Report, Reports, Picker, Proof, Job
+  views/              website: Home, Report, Reports; picker app: Picker, Proof, Job
+  picker/             the picker app: PickerApp, first-run Setup, InstallBanner, main.jsx
   components/         SpotMap, Photo, WasteTags, LanguageMenu, ThemeButton, DemoControls, ...
   components/reactbits/  CircularCarousel, Particles, GlassIcons, BlurText, Counter, CountUp, ShinyText
   lib/                framework-free logic, unchanged by the React move:
@@ -297,9 +310,13 @@ src/
     ai.js             calls to /api/analyze and /api/verify
     maps.js           Leaflet / Google map and the walking route
     i18n.js, i18n/    language loading and the en, hi, ta, kn strings
-    pickers.js, seed.js, photos.js, theme.js, time.js, toast.js, css.js
+    profile.js        the picker's name on this phone
+    sync.js           keeps every device on the shared job list
+    photos.js, theme.js, time.js, toast.js, css.js, litter.js
   styles/             tokens, base, reporter side, picker side, react
-public/assets/        favicon and the sample-job drawings
+picker/index.html     the picker app's page
+public/assets/        the website's favicon
+public/picker/        the picker app's manifest, service worker and icons
 api/
   _lib/ai.js          picks the provider, image blocks, answer validation, error messages
   _lib/gemini.js      Google Gemini provider (REST, free tier)

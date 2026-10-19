@@ -138,7 +138,7 @@ export default function Job({ param: jobId }) {
   return (
     <main className="result">
       <header className="result-head">
-        <a className="btn btn-quiet" href="#/picker">
+        <a className="btn btn-quiet" href="#/">
           {t('nav.backToJobs')}
         </a>
         <span className="mono result-id">{jobId}</span>

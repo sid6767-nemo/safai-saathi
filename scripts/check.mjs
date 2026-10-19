@@ -25,6 +25,7 @@ async function* walk(dir) {
 
 async function* appFiles() {
   yield join(root, 'index.html');
+  yield join(root, 'picker', 'index.html');
   yield* walk(join(root, 'src'));
   yield* walk(join(root, 'public'));
 }

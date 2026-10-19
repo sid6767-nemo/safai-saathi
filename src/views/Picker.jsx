@@ -1,4 +1,5 @@
-// Picker dashboard: a shift console. Earnings first, the job in hand second, open jobs by distance.
+// The picker app's job board. Earnings first, the job in hand second, open jobs nearest first.
+// Distances come from this phone's GPS; the picker is whoever set up the app on this phone.
 
 import { useEffect, useRef, useState } from 'react';
 import DemoBadge from '../components/DemoBadge.jsx';
@@ -7,24 +8,13 @@ import LanguageMenu from '../components/LanguageMenu.jsx';
 import Photo from '../components/Photo.jsx';
 import Counter from '../components/reactbits/Counter/Counter.jsx';
 import SpotMap from '../components/SpotMap.jsx';
-import ThemeButton from '../components/ThemeButton.jsx';
 import WasteTags from '../components/WasteTags.jsx';
 import { useNow, useStore, useTitle } from '../hooks.js';
 import { CONFIG } from '../lib/config.js';
-import { distanceM, formatCoords, formatDistance, getPosition, watchPosition } from '../lib/geo.js';
-import { jobReasoning, t } from '../lib/i18n.js';
+import { distanceM, formatCoords, formatDistance, watchPosition } from '../lib/geo.js';
+import { t } from '../lib/i18n.js';
 import { rupees } from '../lib/payout.js';
-import {
-  JobError,
-  acceptJob,
-  activeJobFor,
-  activePicker,
-  cancelJob,
-  earningsFor,
-  ensureAnchor,
-  openJobsFor,
-  setActivePicker,
-} from '../lib/store.js';
+import { JobError, acceptJob, activeJobFor, cancelJob, earningsFor, openJobsFor } from '../lib/store.js';
 import { clock, countdown, timeAgo } from '../lib/time.js';
 import { toast } from '../lib/toast.js';
 
@@ -32,6 +22,8 @@ const NEW_FOR_MS = 5 * 60_000;
 // Fewer jobs than this look lonely on a ring, so they're shown as a list instead.
 const RING_MIN_JOBS = 3;
 const VIEW_KEY = 'safai-saathi:jobs-view';
+// Tapping the logo this many times opens the demo controls, so pickers never find them by accident.
+const DEMO_TAPS = 5;
 
 function readView() {
   try {
@@ -39,6 +31,24 @@ function readView() {
   } catch {
     return 'ring';
   }
+}
+
+// The phone's own GPS, read live while the job board is open.
+function useHere() {
+  const [here, setHere] = useState(null);
+  const [denied, setDenied] = useState(false);
+  useEffect(
+    () =>
+      watchPosition(
+        (fix) => {
+          setHere(fix);
+          setDenied(false);
+        },
+        (err) => setDenied(err.kind === 'denied' || err.kind === 'insecure' || err.kind === 'unsupported'),
+      ),
+    [],
+  );
+  return { here, denied };
 }
 
 function ViewToggle({ view, onChange }) {
@@ -53,6 +63,8 @@ function ViewToggle({ view, onChange }) {
   );
 }
 
+const Distance = ({ meters }) => (meters == null ? null : <span className="job-dist mono">{formatDistance(meters)}</span>);
+
 // The job at the front of the ring: everything needed to decide, and the Accept button.
 function FocusedJob({ item, now, busy, onAccept }) {
   const { job, distance } = item;
@@ -60,13 +72,13 @@ function FocusedJob({ item, now, busy, onAccept }) {
   return (
     <div className="ring-detail">
       <div className="ring-detail-top">
-        <WasteTags analysis={job.analysis} sample={job.sample} isNew={fresh} />
+        <WasteTags analysis={job.analysis} isNew={fresh} />
         <div className="job-right">
           <span className="job-pay">{rupees(job.payout.picker)}</span>
-          <span className="job-dist mono">{formatDistance(distance)}</span>
+          <Distance meters={distance} />
         </div>
       </div>
-      <p className="job-why">{jobReasoning(job)}</p>
+      <p className="job-why">{job.analysis.reasoning}</p>
       <p className="job-meta">
         <span className="mono">{job.id}</span>
         <span>{timeAgo(job.createdAt)}</span>
@@ -78,26 +90,17 @@ function FocusedJob({ item, now, busy, onAccept }) {
   );
 }
 
-// The phone's own GPS, read live while a job is in progress (the dashboard's distances are from the
-// simulated picker, but directions start wherever the phone really is).
-function useHere() {
-  const [here, setHere] = useState(null);
-  useEffect(() => watchPosition(setHere, () => setHere(null)), []);
-  return here;
-}
-
-function ActiveJob({ job, me, highlight, markRef }) {
+function ActiveJob({ job, here, profile, highlight, markRef }) {
   const [confirming, setConfirming] = useState(false);
   const last = job.attempts.at(-1);
-  const here = useHere();
-  // Inside the proof circle there's nowhere to go, so say so instead of offering the map link.
   const gap = here ? distanceM(here, job) : null;
+  // Inside the proof circle there's nowhere to go, so say so instead of offering the map link.
   const atSpot = gap !== null && gap <= CONFIG.proofRadiusM;
 
   function giveUp() {
     setConfirming(false);
     try {
-      cancelJob(job.id, me.id);
+      cancelJob(job.id, profile.id);
       toast(t('picker.gaveUp'));
     } catch {
       toast(t('picker.giveUpLate'));
@@ -112,12 +115,12 @@ function ActiveJob({ job, me, highlight, markRef }) {
       <div className="active-grid">
         <Photo className="active-photo" photo={job.photo} />
         <div className="active-info">
-          <WasteTags analysis={job.analysis} sample={job.sample} />
+          <WasteTags analysis={job.analysis} />
           <p className="active-pay">{rupees(job.payout.picker)}</p>
-          <p className="mono active-dist">{t('picker.away', { distance: formatDistance(distanceM(me, job)) })}</p>
+          {gap !== null && <p className="mono active-dist">{t('picker.away', { distance: formatDistance(gap) })}</p>}
         </div>
       </div>
-      <p className="active-why">{jobReasoning(job)}</p>
+      <p className="active-why">{job.analysis.reasoning}</p>
       <dl className="facts mono">
         <div>
           <dt>{t('picker.job')}</dt>
@@ -187,9 +190,7 @@ function FinishedRow({ job, now }) {
           <span className={`held-status${job.status === 'disputed' ? ' is-flagged' : ''}${paid ? ' is-paid' : ''}`}>
             {paid ? t('picker.status.paid', { time: clock(job.releasedAt) }) : t(`picker.status.${statusKey}`)}
           </span>
-          {job.status === 'verified_hold' && (
-            <span className="mono held-count">{countdown(job.releaseAt - now)}</span>
-          )}
+          {job.status === 'verified_hold' && <span className="mono held-count">{countdown(job.releaseAt - now)}</span>}
         </span>
         <span className="held-pay">{rupees(job.payout.picker)}</span>
       </a>
@@ -197,32 +198,17 @@ function FinishedRow({ job, now }) {
   );
 }
 
-export default function Picker({ onOpenDemo }) {
+export default function Picker({ profile, onOpenDemo, onChangeName }) {
   useTitle(`${t('picker.title')} – Safai Saathi`);
   const s = useStore();
   const now = useNow(1000);
+  const { here, denied } = useHere();
   const [justAccepted, setJustAccepted] = useState(null);
   const [view, setView] = useState(readView);
   const [focus, setFocus] = useState(0);
   const [focusFor, setFocusFor] = useState('');
+  const taps = useRef({ count: 0, at: 0 });
   const markRef = useRef(null);
-
-  function chooseView(next) {
-    setView(next);
-    try {
-      localStorage.setItem(VIEW_KEY, next);
-    } catch {
-      // Not remembering the choice is fine.
-    }
-  }
-
-  // The first location read places the simulated pickers and sample jobs.
-  useEffect(() => {
-    if (s.anchor) return;
-    getPosition()
-      .then((fix) => ensureAnchor(fix, 'gps'))
-      .catch(() => ensureAnchor(CONFIG.fallbackLocation, 'demo'));
-  }, [s.anchor]);
 
   // After accepting, the new job's main action gets focus and scrolls into view.
   useEffect(() => {
@@ -231,20 +217,9 @@ export default function Picker({ onOpenDemo }) {
     markRef.current?.closest('.active-job')?.scrollIntoView({ block: 'nearest' });
   }, [justAccepted]);
 
-  if (!s.anchor) {
-    return (
-      <main className="console">
-        <p className="console-wait" role="status">
-          {t('picker.finding')}
-        </p>
-      </main>
-    );
-  }
-
-  const me = activePicker(s);
-  const active = activeJobFor(s, me.id);
-  const open = openJobsFor(s, me);
-  const money = earningsFor(s, me.id);
+  const active = activeJobFor(s, profile.id);
+  const open = openJobsFor(s, here);
+  const money = earningsFor(s, profile.id);
   const ringable = open.length >= RING_MIN_JOBS;
   const showRing = ringable && view === 'ring';
   const focusIndex = Math.min(focus, Math.max(0, open.length - 1));
@@ -257,9 +232,27 @@ export default function Picker({ onOpenDemo }) {
     setFocus(0);
   }
 
+  function chooseView(next) {
+    setView(next);
+    try {
+      localStorage.setItem(VIEW_KEY, next);
+    } catch {
+      // Not remembering the choice is fine.
+    }
+  }
+
+  function tapLogo() {
+    const at = Date.now();
+    taps.current = { count: at - taps.current.at < 800 ? taps.current.count + 1 : 1, at };
+    if (taps.current.count >= DEMO_TAPS) {
+      taps.current.count = 0;
+      onOpenDemo();
+    }
+  }
+
   function accept(id) {
     try {
-      acceptJob(id, me.id);
+      acceptJob(id, profile);
       setJustAccepted(id);
     } catch (err) {
       toast(err instanceof JobError ? t(err.kind === 'taken' ? 'picker.takenToast' : 'picker.busyToast') : err.message);
@@ -269,29 +262,13 @@ export default function Picker({ onOpenDemo }) {
   return (
     <main className="console">
       <header className="console-head">
-        <a className="wm-small" href="#/" aria-label="Safai Saathi">
+        <button type="button" className="wm-small wm-button" onClick={tapLogo} aria-label="Safai Saathi">
           <span lang="hi">सफ़ाई साथी</span>
-        </a>
+        </button>
         <LanguageMenu dark />
-        <label className="who">
-          <span className="visually-hidden">{t('picker.workingAs')}</span>
-          <select value={me.id} onChange={(e) => setActivePicker(e.target.value)}>
-            {s.pickers.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <ThemeButton dark />
-        <button className="icon-btn" type="button" onClick={onOpenDemo} aria-label={t('home.demo')}>
-          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
-            <path
-              fill="currentColor"
-              d="M19.4 13a7.6 7.6 0 0 0 0-2l2-1.6-2-3.4-2.4 1a7.5 7.5 0 0 0-1.7-1L15 3.5h-4l-.4 2.5a7.5 7.5 0 0 0-1.7 1l-2.4-1-2 3.4L6.6 11a7.6 7.6 0 0 0 0 2l-2 1.6 2 3.4 2.4-1c.5.4 1.1.7 1.7 1l.4 2.5h4l.4-2.5c.6-.3 1.2-.6 1.7-1l2.4 1 2-3.4-2-1.6ZM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Z"
-              transform="translate(-1 0)"
-            />
-          </svg>
+        <button type="button" className="who-name" onClick={onChangeName} title={t('picker.changeName')}>
+          <span className="visually-hidden">{t('picker.changeName')}: </span>
+          {profile.name}
         </button>
       </header>
       <DemoBadge />
@@ -316,8 +293,21 @@ export default function Picker({ onOpenDemo }) {
         </div>
       </section>
 
+      {!here && (
+        <p className="locating" role="status">
+          {denied ? t('picker.noLocation') : t('picker.finding')}
+        </p>
+      )}
+
       {active && (
-        <ActiveJob key={active.id} job={active} me={me} highlight={justAccepted === active.id} markRef={markRef} />
+        <ActiveJob
+          key={active.id}
+          job={active}
+          here={here}
+          profile={profile}
+          highlight={justAccepted === active.id}
+          markRef={markRef}
+        />
       )}
 
       <section className="open-jobs" aria-labelledby="open-title">
@@ -348,8 +338,8 @@ export default function Picker({ onOpenDemo }) {
                 <li className={`job-row${fresh ? ' is-new' : ''}`} key={job.id} style={{ '--row': i }}>
                   <Photo className="job-photo" photo={job.photo} />
                   <div className="job-mid">
-                    <WasteTags analysis={job.analysis} short sample={job.sample} isNew={fresh} />
-                    <p className="job-why">{jobReasoning(job)}</p>
+                    <WasteTags analysis={job.analysis} short isNew={fresh} />
+                    <p className="job-why">{job.analysis.reasoning}</p>
                     <p className="job-meta">
                       <span className="mono">{job.id}</span>
                       <span>{timeAgo(job.createdAt)}</span>
@@ -357,7 +347,7 @@ export default function Picker({ onOpenDemo }) {
                   </div>
                   <div className="job-right">
                     <span className="job-pay">{rupees(job.payout.picker)}</span>
-                    <span className="job-dist mono">{formatDistance(distance)}</span>
+                    <Distance meters={distance} />
                   </div>
                   <button className="btn btn-accept" onClick={() => accept(job.id)} disabled={Boolean(active)}>
                     {t('picker.accept')}

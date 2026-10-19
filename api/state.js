@@ -1,14 +1,13 @@
 // The shared job list, so phones and laptops see the same reports.
 //
 // GET  /api/state?v=<version>&epoch=<epoch>  -> every job, or { unchanged } if nothing has moved
-// POST /api/state { epoch, anchor?, jobs }     -> merge in a device's changes (newest change wins)
+// POST /api/state { epoch, jobs }              -> merge in a device's changes (newest change wins)
 // POST /api/state { reset: true }              -> a fresh, empty set (Demo controls -> Reset)
 //
 // Every answer includes `configured`; without a store the app stays on-device only.
 // Photos are stored separately (api/photo.js).
 
 import { randomUUID } from 'node:crypto';
-import { CONFIG } from '../src/lib/config.js';
 import { HttpError } from './_lib/errors.js';
 import { namespace, store } from './_lib/kv.js';
 import { sendError } from './_lib/respond.js';
@@ -18,17 +17,11 @@ const MAX_JOBS_PER_SYNC = 50;
 const MAX_BODY_CHARS = 300_000;
 const JOB_ID = /^SS-[A-Z0-9]{3,6}$/;
 
-const empty = () => ({ epoch: null, version: 0, anchor: null, jobs: [] });
+const empty = () => ({ epoch: null, version: 0, jobs: [] });
 
 async function read() {
   const raw = await store.get(KEY);
   return { raw, state: raw ? JSON.parse(raw) : empty() };
-}
-
-// The same rule the app applies: once enough real reports exist, untaken sample jobs go.
-function retireSamples(s) {
-  const real = s.jobs.filter((j) => !j.sample && j.status !== 'cancelled').length;
-  if (real >= CONFIG.samplesUntilReports) s.jobs = s.jobs.filter((j) => !(j.sample && j.status === 'open'));
 }
 
 function checkJobs(jobs) {
@@ -43,16 +36,14 @@ function checkJobs(jobs) {
   return jobs;
 }
 
-// Each job keeps whichever copy was changed most recently; the first location ever sent fixes
-// where the simulated pickers and sample jobs sit, for everyone.
-function merge(state, { epoch, anchor, jobs }) {
-  const next = { ...state, jobs: [...state.jobs] };
+// Each job keeps whichever copy was changed most recently. Sample jobs from the old demo build
+// are ignored.
+function merge(state, { epoch, jobs }) {
+  const next = { ...state, jobs: state.jobs.filter((j) => !j.sample) };
   next.epoch ||= epoch || randomUUID();
-  if (!next.anchor && anchor && Number.isFinite(anchor.lat) && Number.isFinite(anchor.lng)) {
-    next.anchor = { lat: anchor.lat, lng: anchor.lng, source: String(anchor.source ?? 'gps') };
-  }
   const at = new Map(next.jobs.map((job, i) => [job.id, i]));
   for (const job of jobs) {
+    if (job.sample) continue;
     const i = at.get(job.id);
     if (i === undefined) {
       at.set(job.id, next.jobs.length);
@@ -61,7 +52,6 @@ function merge(state, { epoch, anchor, jobs }) {
       next.jobs[i] = job;
     }
   }
-  retireSamples(next);
   next.version = state.version + 1;
   return next;
 }
@@ -91,7 +81,7 @@ export default async function handler(req, res) {
         if (body.epoch && state.epoch && body.epoch !== state.epoch) {
           return res.status(409).json({ configured: true, stale: true, ...state });
         }
-        next = merge(state, { epoch: body.epoch, anchor: body.anchor, jobs: checkJobs(body.jobs ?? []) });
+        next = merge(state, { epoch: body.epoch, jobs: checkJobs(body.jobs ?? []) });
       }
       if (await store.cas(KEY, raw, JSON.stringify(next))) return res.status(200).json({ configured: true, ...next });
     }
