@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Behind the status bar and the gesture bar: the app's page colour. -->
+    <color name="bar_background">#14161A</color>
+</resources>

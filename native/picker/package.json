@@ -1,0 +1,5 @@
+{
+  "name": "safai-saathi-picker-android",
+  "private": true,
+  "description": "Android shell for the picker app. Its screens come from the main project: run npm run android at the repo root."
+}

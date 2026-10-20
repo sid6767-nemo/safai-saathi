@@ -1,5 +1,7 @@
 // Photos live in IndexedDB: localStorage's ~5 MB quota fills up after a handful of images.
 
+import { apiUrl } from './api.js';
+
 const DB_NAME = 'safai-saathi';
 const STORE = 'photos';
 const urlCache = new Map();
@@ -41,7 +43,7 @@ export async function photoUrl(ref) {
   if (urlCache.has(ref)) return urlCache.get(ref);
   const blob = await getPhoto(ref);
   // Not on this device: another device took it, so read the shared copy.
-  if (!blob) return `/api/photo?id=${encodeURIComponent(ref)}`;
+  if (!blob) return apiUrl(`/api/photo?id=${encodeURIComponent(ref)}`);
   const url = URL.createObjectURL(blob);
   urlCache.set(ref, url);
   return url;

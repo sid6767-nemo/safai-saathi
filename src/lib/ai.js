@@ -1,5 +1,6 @@
 // Browser side of the two AI routes. The API key stays on the server (api/_lib/ai.js).
 
+import { apiUrl } from './api.js';
 import { languageInfo, t } from './i18n.js';
 import { getState } from './store.js';
 
@@ -18,7 +19,7 @@ async function post(path, body) {
   const timer = setTimeout(() => controller.abort(), 50_000);
   let res;
   try {
-    res = await fetch(path, {
+    res = await fetch(apiUrl(path), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       // The AI answers in the language on screen.

@@ -1,12 +1,10 @@
-// Reporter's list: what happened to each spot, rewards, and the two things a reporter can do:
+// Reporter's list: what happened to each spot, and the two things a reporter can do:
 // withdraw a spot nobody has taken yet, or flag a cleanup as still dirty during the hold.
 
 import { useState } from 'react';
 import Photo from '../components/Photo.jsx';
-import CountUp from '../components/reactbits/CountUp/CountUp.jsx';
 import WasteTags from '../components/WasteTags.jsx';
 import { useNow, useStore, useTitle } from '../hooks.js';
-import { CONFIG } from '../lib/config.js';
 import { t } from '../lib/i18n.js';
 import { rupees } from '../lib/payout.js';
 import { JobError, flagJob, withdrawReport } from '../lib/store.js';
@@ -29,7 +27,7 @@ function statusLine(s, job, now) {
     case 'cancelled':
       return t('reports.status.cancelled');
     case 'released':
-      return t('reports.status.released', { amount: rupees(job.payout.reporter) });
+      return t('reports.status.released');
     default:
       return '';
   }
@@ -87,10 +85,6 @@ export default function Reports() {
   const [confirming, setConfirming] = useState(null);
 
   const mine = s.jobs;
-  const earned = mine.filter((j) => j.status === 'released').reduce((sum, j) => sum + j.payout.reporter, 0);
-  const pending = mine
-    .filter((j) => !['released', 'disputed', 'cancelled'].includes(j.status))
-    .reduce((sum, j) => sum + j.payout.reporter, 0);
 
   return (
     <main className="reports">
@@ -100,13 +94,6 @@ export default function Reports() {
         </a>
         <h1>{t('reports.title')}</h1>
       </header>
-      <section className="reward-strip" aria-label={t('reports.rewards')}>
-        <span>{t('reports.rewards')}</span>
-        <strong>
-          <CountUp to={earned} prefix="₹" separator="," duration={0.9} trigger="load" />
-        </strong>
-        {pending > 0 && <span className="reward-pending">{t('reports.pending', { amount: rupees(pending) })}</span>}
-      </section>
       {mine.length ? (
         <ol className="report-list">
           {mine.map((job) => (
@@ -136,7 +123,7 @@ export default function Reports() {
           ))}
         </ol>
       ) : (
-        <p className="empty-light">{t('reports.empty', { share: Math.round(CONFIG.reporterShare * 100) })}</p>
+        <p className="empty-light">{t('reports.empty')}</p>
       )}
       <a className="btn btn-primary btn-block" href="#/report">
         {t('home.report')}

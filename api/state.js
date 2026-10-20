@@ -10,7 +10,7 @@
 import { randomUUID } from 'node:crypto';
 import { HttpError } from './_lib/errors.js';
 import { namespace, store } from './_lib/kv.js';
-import { sendError } from './_lib/respond.js';
+import { allowApps, sendError } from './_lib/respond.js';
 
 const KEY = `${namespace}:state`;
 const MAX_JOBS_PER_SYNC = 50;
@@ -57,6 +57,7 @@ function merge(state, { epoch, jobs }) {
 }
 
 export default async function handler(req, res) {
+  if (allowApps(req, res)) return;
   if (!store) return res.status(200).json({ configured: false });
   try {
     if (req.method === 'GET') {

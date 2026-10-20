@@ -37,7 +37,6 @@ export const strings = {
 
   'split.picker': 'Picker gets',
   'split.you': 'You get',
-  'split.fund': 'Ward fund pays',
 
   // Home
   'home.tagline': 'Seen a garbage spot? Photograph it, and a local waste picker gets paid to clear it.',
@@ -49,8 +48,8 @@ export const strings = {
   'home.how1.body': 'The camera opens inside the app and saves where you are standing.',
   'home.how2.title': 'A picker nearby clears it',
   'home.how2.body': 'They see the payout before they accept the job.',
-  'home.how3.title': 'Everyone gets paid',
-  'home.how3.body': 'A proof photo is checked, the picker is paid, and you get a reward.',
+  'home.how3.title': 'The picker gets paid',
+  'home.how3.body': 'A proof photo is checked, then the picker is paid from the ward cleanup fund.',
   'home.footer': 'A prototype for a school STEM pitch. The pickers and payments are simulated.',
   'home.demo': 'Demo controls',
 
@@ -72,8 +71,7 @@ export const strings = {
   'report.estimatedByYou': 'Estimated by you. AI analysis is unavailable.',
   'report.seen': 'Seen: {items}',
   'report.pickerEarns': 'Picker earns for clearing it',
-  'report.youEarn': "You earn once it's verified clean",
-  'report.fine': '{rate} base for {type} × {mult} for a {size} job. Your reward is 1/20 of the picker’s payout, added on top by the ward cleanup fund (simulated).',
+  'report.fine': '{rate} base for {type} × {mult} for a {size} job, paid by the ward cleanup fund (simulated).',
   'report.submit': 'Report this spot',
   'report.retake': 'Retake photo',
   'report.notWaste.title': "This doesn't look like a garbage spot",
@@ -85,7 +83,7 @@ export const strings = {
   'report.howMuch': 'How much',
   'report.demoLocation': 'Use demo location ({place})',
   'report.done.job': 'Job {id}',
-  'report.done.note': "Your {amount} is paid when a picker's cleanup photo passes verification and the {hours}-hour hold ends. It comes from the ward fund, not from the picker.",
+  'report.done.note': 'The picker is paid once their cleanup photo passes verification and the {hours}-hour hold ends. You can follow it in your reports.',
   'report.another': 'Report another spot',
   'report.myReports': 'My reports',
 
@@ -237,19 +235,16 @@ export const strings = {
   'job.yourProof': 'Your proof, {time}',
   'job.gone': 'This job no longer exists',
   'job.unfinished': "This job isn't finished yet",
-  'job.reporterReward': "Reporter's reward",
 
   // My reports
   'reports.title': 'My reports',
-  'reports.rewards': 'Rewards earned',
-  'reports.pending': '{amount} still to come',
   'reports.before': 'Before',
   'reports.after': 'After',
   'reports.status.accepted': '{name} accepted it at {time} and is on the way.',
   'reports.status.review': '{name} sent a cleanup photo. A ward officer is reviewing it.',
   'reports.status.hold': 'Cleaned by {name}, verified at {time}. Payout releases in {countdown}.',
   'reports.status.disputed': 'You flagged this as still dirty. The payout is paused while a ward officer checks it.',
-  'reports.status.released': 'Cleaned and paid. You earned {amount}.',
+  'reports.status.released': 'Cleaned, and the picker has been paid.',
   'reports.withdraw': 'Withdraw this report',
   'reports.withdrawNote': 'Pickers stop seeing it. You can report the same spot again later.',
   'reports.withdrawn': 'Report withdrawn.',
@@ -259,7 +254,7 @@ export const strings = {
   'reports.flagNote': "The picker's {amount} payout pauses while a ward officer re-checks the spot.",
   'reports.flagged': 'Flagged. The payout is paused until a ward officer checks the spot.',
   'reports.flagLate': 'The hold has ended, so this cleanup can no longer be flagged.',
-  'reports.empty': 'No reports yet. Each spot you report earns you {share}% of the picker’s payout once it is verified clean.',
+  'reports.empty': 'No reports yet. Photograph a garbage spot and it shows up here.',
 
   // Demo controls
   'demo.title': 'Demo controls',

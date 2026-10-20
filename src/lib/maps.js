@@ -3,6 +3,7 @@
 // With a Google Maps Embed key configured (MAPS_EMBED_KEY on the server), the map is Google Maps.
 // Without one it is OpenStreetMap through Leaflet, which needs no key and no billing account.
 
+import { apiUrl } from './api.js';
 import { CONFIG } from './config.js';
 import { cssVar } from './css.js';
 import { distanceM, formatDistance, getPosition } from './geo.js';
@@ -21,7 +22,7 @@ let configPromise;
 let leafletPromise;
 
 export function mapConfig() {
-  configPromise ??= fetch('/api/config')
+  configPromise ??= fetch(apiUrl('/api/config'))
     .then((res) => (res.ok ? res.json() : {}))
     .catch(() => ({}));
   return configPromise;

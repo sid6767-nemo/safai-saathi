@@ -107,8 +107,7 @@ dialog.map-dialog .map-bar .btn {
 /* CountUp renders inline slots; keep them on the parent's type. */
 .earn-amount span,
 .release-amount span,
-.receipt dd span,
-.reward-strip strong span {
+.receipt dd span {
   font: inherit;
   letter-spacing: inherit;
 }

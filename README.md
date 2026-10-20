@@ -3,8 +3,9 @@
 **Photograph a garbage spot. A local waste picker gets paid to clear it.**
 
 Safai Saathi ("cleanliness companion") is an Uber-style marketplace prototype. Citizens report litter
-and dumps with a live photo on the website. An AI vision model sorts the waste and sizes the job, and
-informal waste pickers see it in their own app, on a job board with the payout up front. Payment is released (in this prototype,
+and dumps with a live photo in the reporter app (or on the website). An AI vision model sorts the waste
+and sizes the job, and informal waste pickers see it in their own Android app, on a job board with the
+payout up front. Reporters aren't paid: a garbage spot is already a nuisance to them. Payment is released (in this prototype,
 simulated) only after a live, code-stamped, GPS-checked proof photo passes verification.
 
 > **This is a prototype built for a school STEM competition pitch, not a production system.**
@@ -34,8 +35,8 @@ Works best on a phone, or a laptop browser narrowed to phone width. The camera n
 5. **Proof.** *Mark as cleaned* opens the live camera with a one-time job code on screen. The photo
    is stamped with that code, the time and the GPS position, then checked (see below).
 6. **Payout.** If every check passes, the payout is held for 24 hours, during which the reporter can
-   flag the spot as still dirty. Then it's released: the picker gets the payout and the reporter gets
-   a 1/20 reward on top, both from the ward cleanup fund.
+   flag the spot as still dirty. Then it's released to the picker from the ward cleanup fund.
+   Reporters get no reward: the bet is that people will photograph a spot that bothers them anyway.
 
 ## What's real and what's simulated
 
@@ -81,8 +82,7 @@ the AI checks.
 ## How the payout is calculated
 
 ```
-picker payout   = base rate × size multiplier, rounded to the nearest ₹5
-reporter reward = picker payout ÷ 20   (paid by the fund on top, not taken from the picker)
+picker payout = base rate × size multiplier, rounded to the nearest ₹5
 ```
 
 | | Small ×1 | Medium ×2.5 | Large ×5 |
@@ -110,25 +110,60 @@ holder to be 18 or older. On Gemini's free tier Google may use submitted photos 
 products, and human reviewers may see them, so keep people's faces and anything private out of
 demo photos.
 
-## Two apps, one job list
+## Two Android apps, one job list
 
-| | Who | Address | What it does |
-|---|---|---|---|
-| **Website** | People reporting garbage | `/` | Report a spot, see what happened to your reports, flag a bad cleanup |
-| **Picker app** | Waste pickers | `/picker/` | See jobs nearby, accept one, take the proof photo, see earnings |
+| | Who | Android app | Also on the web | What it does |
+|---|---|---|---|---|
+| **Reporter app** | People reporting garbage | `in.safaisaathi.reporter` ("Safai Saathi") | `/` | Report a spot, see what happened to your reports, flag a bad cleanup |
+| **Picker app** | Waste pickers | `in.safaisaathi.picker` ("Safai Picker") | `/picker/` | See jobs nearby, accept one, take the proof photo, see earnings |
 
-The picker app is an installable web app (a PWA): on Android, open the address in Chrome and tap
-**Install the app** (or Chrome's menu, then **Install app**). It then has its own icon, opens full
-screen without the browser, and keeps working on a weak connection. On first launch it asks for the
-language (Kannada, Tamil, Hindi or English) and the picker's name, once; distances come from the
-phone's GPS. The website has no link to it, and the demo controls inside it open only after five taps
-on the logo, so pickers don't stumble into them. It is not locked to pickers yet.
+Both apps, and both web addresses, read and write the same job list on the server
+(`https://safai-saathi-mu.vercel.app/api/state`), so a spot reported in one shows up in the other
+within seconds, and the reporter sees the picker's name once it's accepted.
 
-For the Play Store, the same app can be wrapped as an Android app without rewriting it (a "Trusted
-Web Activity", for example with [Bubblewrap](https://github.com/GoogleChromeLabs/bubblewrap) or
-[PWABuilder](https://www.pwabuilder.com)). That needs a Google Play developer account (a one-time
-$25, held by someone 18 or older) and, for a new personal account, a 14-day closed test with at least
-12 testers before it can go public.
+The Android apps are built with [Capacitor](https://capacitorjs.com): each is a native Android
+project (`native/reporter/android`, `native/picker/android`) that carries the same React screens
+inside the app and asks Android for the camera and location itself. Nothing is rewritten, so a fix
+to a screen reaches the website and both apps. A small native class, `SafeChromeClient.java`, asks for
+the camera and location one at a time (Capacitor's default crashes when both are asked at once on
+first launch) and refuses every file chooser, so photos can still only come from the live camera.
+
+The picker app asks for the language (Kannada, Tamil, Hindi or English) and the picker's name once,
+on first launch; distances come from the phone's GPS. The demo controls open only after five taps on
+the logo. It is not locked to pickers yet.
+
+### Building the apps
+
+Needs Java 21 and the Android SDK (platform 36). On a Mac:
+
+```bash
+brew install openjdk@21
+brew install --cask android-commandlinetools
+export JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home
+export ANDROID_HOME=/opt/homebrew/share/android-commandlinetools
+sdkmanager --licenses                     # read and accept Google's Android SDK licence
+npm run android                           # builds both apps' screens and copies them in
+cd native/picker/android && ./gradlew assembleDebug    # -> app/build/outputs/apk/debug/app-debug.apk
+```
+
+`npm run android -- picker` builds one app. `SAFAI_API_ORIGIN=https://... npm run android` points the
+apps at another server (a Vercel preview, say). A debug APK installs on any Android phone once
+*Install unknown apps* is allowed for whatever opens it (Files, WhatsApp, Drive).
+
+### Putting them on the Play Store
+
+Each app is a separate Play listing under one developer account (a one-time $25, held by someone 18
+or older). A new personal account must run a closed test with at least 12 testers for 14 days before
+an app can go public.
+
+1. Decide the names first. The package ids (`in.safaisaathi.reporter`, `in.safaisaathi.picker`) can
+   never change once uploaded, so change `appId` in `native/*/capacitor.config.json` before the first
+   upload if the project is renamed.
+2. Create an upload key once per app and keep it safe (outside this repo):
+   `keytool -genkey -v -keystore picker-upload.jks -keyalg RSA -keysize 2048 -validity 10000 -alias upload`
+3. Build a signed bundle: `./gradlew bundleRelease`, then sign it, or use Android Studio's
+   *Build → Generate Signed App Bundle*. Upload the `.aab` and let Play App Signing hold the real key.
+4. Raise `versionCode` in `native/*/android/app/build.gradle` for every new upload.
 
 ## Sharing jobs between devices
 
@@ -226,7 +261,7 @@ The two flows are meant to feel like two different products for two different pe
 
 Colours come from Indian street and festival colour rather than eco branding: asphalt `#14161A`,
 kerb concrete `#E2E5E0`, auto-rickshaw yellow `#FFC20E` for actions, marigold `#FF7A1A` for the job
-in hand, kumkum pink `#E8336D` for rewards, and the Swachh Bharat segregation-bin colours, dry blue
+in hand, and the Swachh Bharat segregation-bin colours, dry blue
 `#1E5BC6` and wet green `#1B7A43` (only ever used for waste types; a brighter signal green
 `#24B26B` marks verified and paid), plus
 signal red `#D12A25` for rejections. Buttons are slabs with a hard offset shadow, like painted
@@ -255,7 +290,7 @@ explaining. Each one marks something that just happened or deserves attention:
 | GlassIcons | The three "How it works" tiles (camera, sack, rupee), each a link to that step's screen |
 | BlurText | The home headline resolves word by word (replays when the language changes) |
 | Counter | The picker's earnings and jobs done: odometer digits roll up when a payout lands |
-| CountUp | The receipt's payout (re-counts as you change the estimate), rewards, the released payout |
+| CountUp | The receipt's payout (re-counts as you change the estimate) and the released payout |
 | ShinyText | "Reported", "Cleanup verified" and "Payout released": one sweep of light when they appear |
 
 The ring only appears with three or more open jobs; with fewer it would look empty, so the dashboard
@@ -312,11 +347,16 @@ src/
     i18n.js, i18n/    language loading and the en, hi, ta, kn strings
     profile.js        the picker's name on this phone
     sync.js           keeps every device on the shared job list
+    api.js            where the server is (the website's own /api, or the live site from the apps)
     photos.js, theme.js, time.js, toast.js, css.js, litter.js
   styles/             tokens, base, reporter side, picker side, react
 picker/index.html     the picker app's page
 public/assets/        the website's favicon
 public/picker/        the picker app's manifest, service worker and icons
+native/
+  reporter/           Capacitor config and the reporter app's Android project
+  picker/             Capacitor config and the picker app's Android project
+                      (each has SafeChromeClient.java: one permission prompt at a time, no file picker)
 api/
   _lib/ai.js          picks the provider, image blocks, answer validation, error messages
   _lib/gemini.js      Google Gemini provider (REST, free tier)
@@ -327,6 +367,7 @@ api/
 scripts/
   dev-server.mjs      Vite in middleware mode plus the same api/ handlers Vercel runs
   check.mjs           fails if any file or gallery input appears, or a language is missing keys
+  build-android.mjs   builds each app's screens against the live server and syncs them into Android
 ```
 
 ## Known limits
@@ -334,8 +375,7 @@ scripts/
 - **Laptop GPS is coarse.** Laptops locate by Wi-Fi, often to ±30 to 100 m. Two readings on the same
   laptop usually match, so the honest path passes, but a phone outdoors is far more reliable.
 - **Device clocks can be changed.** Production would stamp time and issue codes on the server.
-- **One browser, one set of data.** Two tabs stay in sync (try a reporter tab and a picker tab side
-  by side), but two devices don't share jobs without a backend.
+- **No accounts.** Anyone with an app or the link can add jobs, and a picker is just a typed name.
 - **The AI can be wrong.** That's why there's a hold window, a reporter flag and a human review path.
 
 ## License

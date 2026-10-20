@@ -1,0 +1,8 @@
+{
+  "appId": "in.safaisaathi.reporter",
+  "appName": "Safai Saathi",
+  "webDir": "www",
+  "android": {
+    "backgroundColor": "#15171A"
+  }
+}

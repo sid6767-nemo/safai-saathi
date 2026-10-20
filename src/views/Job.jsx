@@ -18,14 +18,6 @@ function Split({ job }) {
         <dt>{t('split.you')}</dt>
         <dd>{rupees(job.payout.picker)}</dd>
       </div>
-      <div>
-        <dt>{t('job.reporterReward')}</dt>
-        <dd>{rupees(job.payout.reporter)}</dd>
-      </div>
-      <div>
-        <dt>{t('split.fund')}</dt>
-        <dd>{rupees(job.payout.fundTotal)}</dd>
-      </div>
     </dl>
   );
 }

@@ -1,6 +1,6 @@
 /* Palette from Indian street and festival colour rather than "eco" branding.
    Dry-bin blue and wet-bin green are the Swachh Bharat segregation colours, so those two always
-   mean a waste type. Marigold marks work in progress, kumkum pink marks rewards, and the brighter
+   mean a waste type. Marigold marks work in progress, kumkum pink pins the garbage spot on the map, and the brighter
    signal green and blue below carry state: verified/paid, and information. */
 :root {
   --asphalt: #14161a; /* picker console ground */
@@ -11,7 +11,7 @@
   --yellow: #ffc20e; /* auto-rickshaw canopy, hazard striping: brand and primary action */
   --yellow-press: #e0a800;
   --marigold: #ff7a1a; /* work in progress */
-  --kumkum: #e8336d; /* rewards and the reporter's share */
+  --kumkum: #e8336d; /* the garbage spot's pin on the map */
   --dry: #1e5bc6; /* dry-bin blue */
   --wet: #1b7a43; /* wet-bin green */
   --verified: #24b26b; /* checks that passed, cleanups verified, money paid */

@@ -5,6 +5,7 @@
 // so a job never reaches another device before its picture does. With no shared store on the
 // server, it stops and the app stays on-device only.
 
+import { apiUrl } from './api.js';
 import { getPhoto } from './photos.js';
 import { applyRemote, getState, subscribe } from './store.js';
 
@@ -59,7 +60,7 @@ async function uploadPhotos(job) {
     if (!blob) continue; // taken on another device, so already shared
     const image = await shareableDataUrl(blob);
     if (!image) return false;
-    const res = await fetch('/api/photo', {
+    const res = await fetch(apiUrl('/api/photo'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id: ref, image }),
@@ -78,7 +79,7 @@ function take(data) {
 async function pull() {
   const { epoch } = getState();
   const v = remote?.version ?? -1;
-  const res = await fetch(`/api/state?v=${v}&epoch=${encodeURIComponent(epoch ?? '')}`, { cache: 'no-store' });
+  const res = await fetch(apiUrl(`/api/state?v=${v}&epoch=${encodeURIComponent(epoch ?? '')}`), { cache: 'no-store' });
   if (!res.ok) throw new Error(`state ${res.status}`);
   const data = await res.json();
   configured = Boolean(data.configured);
@@ -95,7 +96,7 @@ async function push() {
   const ready = [];
   for (const job of changed) if (await uploadPhotos(job)) ready.push(job);
   if (!ready.length) return;
-  const res = await fetch('/api/state', {
+  const res = await fetch(apiUrl('/api/state'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ epoch: s.epoch, jobs: ready }),
@@ -145,7 +146,7 @@ export async function resetShared() {
   } catch {
     // Nothing to forget.
   }
-  await fetch('/api/state', {
+  await fetch(apiUrl('/api/state'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ reset: true }),

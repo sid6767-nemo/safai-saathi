@@ -4,7 +4,6 @@ export const CONFIG = {
   baseRate: { dry: 120, wet: 200 },
   sizeMultiplier: { small: 1, medium: 2.5, large: 5 },
   roundTo: 5,
-  reporterShare: 1 / 20,
 
   proofRadiusM: 30, // the proof photo must be taken this close to the reported spot
   maxFixAgeMs: 15_000, // a GPS fix older than this is read again before it's used

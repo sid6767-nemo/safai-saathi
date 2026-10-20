@@ -6,3 +6,7 @@ node_modules/
 .vercel
 dist/
 .env*
+
+# Android apps: the built screens are copied in by npm run android
+native/*/www/
+apk/

@@ -7,6 +7,7 @@
 import * as claude from './claude.js';
 import { HttpError } from './errors.js';
 import * as gemini from './gemini.js';
+import { allowApps } from './respond.js';
 
 export { HttpError };
 
@@ -54,6 +55,7 @@ export async function askForJson({ system, content, schema }) {
 // Wraps a route body as a Vercel Node handler: POST only, JSON in, JSON out.
 export function jsonRoute(run) {
   return async (req, res) => {
+    if (allowApps(req, res)) return;
     if (req.method !== 'POST') return res.status(405).json({ code: 'method', message: 'Use POST.' });
     try {
       res.status(200).json(await run(req.body ?? {}));

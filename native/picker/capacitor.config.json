@@ -1,0 +1,13 @@
+{
+  "appId": "in.safaisaathi.picker",
+  "appName": "Safai Picker",
+  "webDir": "www",
+  "android": {
+    "backgroundColor": "#14161A"
+  },
+  "plugins": {
+    "SystemBars": {
+      "style": "DARK"
+    }
+  }
+}

@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import DemoControls from '../components/DemoControls.jsx';
 import Toaster from '../components/Toaster.jsx';
 import { useHashPath, useLanguage, useTheme } from '../hooks.js';
+import { isNativeApp } from '../lib/api.js';
 import { loadProfile } from '../lib/profile.js';
 import { releaseDue } from '../lib/store.js';
 import Job from '../views/Job.jsx';
@@ -74,7 +75,7 @@ export default function PickerApp() {
     screen = (
       // Keyed by path: each screen mounts fresh, so cameras and timers never leak between them.
       <div key={path} className={`app ${route.mode}`} lang={lang}>
-        {route.view === Picker && <InstallBanner />}
+        {route.view === Picker && !isNativeApp && <InstallBanner />}
         <View
           param={route.param}
           profile={profile}

@@ -41,10 +41,6 @@ function Receipt({ type, size }) {
             <CountUp to={p.picker} prefix="₹" separator="," duration={0.7} trigger="load" />
           </dd>
         </div>
-        <div className="receipt-row receipt-you">
-          <dt>{t('report.youEarn')}</dt>
-          <dd>{rupees(p.reporter)}</dd>
-        </div>
       </dl>
       <p className="fine">
         {t('report.fine', {
@@ -391,22 +387,12 @@ export default function Report() {
             </h2>
             <p className="job-id mono">{t('report.done.job', { id: job.id })}</p>
             <dl className="split">
-              <div>
+              <div className="split-picker">
                 <dt>{t('split.picker')}</dt>
                 <dd>{rupees(job.payout.picker)}</dd>
               </div>
-              <div className="split-you">
-                <dt>{t('split.you')}</dt>
-                <dd>{rupees(job.payout.reporter)}</dd>
-              </div>
-              <div>
-                <dt>{t('split.fund')}</dt>
-                <dd>{rupees(job.payout.fundTotal)}</dd>
-              </div>
             </dl>
-            <p className="fine">
-              {t('report.done.note', { amount: rupees(job.payout.reporter), hours: CONFIG.holdHours })}
-            </p>
+            <p className="fine">{t('report.done.note', { hours: CONFIG.holdHours })}</p>
             <div className="sheet-actions">
               <button className="btn btn-primary btn-block" onClick={retake} autoFocus>
                 {t('report.another')}

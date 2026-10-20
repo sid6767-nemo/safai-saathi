@@ -5,7 +5,7 @@
 
 import { HttpError } from './_lib/errors.js';
 import { namespace, store } from './_lib/kv.js';
-import { sendError } from './_lib/respond.js';
+import { allowApps, sendError } from './_lib/respond.js';
 
 const PHOTO_ID = /^(report|proof)-[a-z0-9]+-[a-z0-9]+$/;
 const DATA_URL = /^data:image\/jpeg;base64,([A-Za-z0-9+/=]+)$/;
@@ -20,6 +20,7 @@ function checkId(id) {
 }
 
 export default async function handler(req, res) {
+  if (allowApps(req, res)) return;
   if (!store) return res.status(404).json({ code: 'no_store', message: 'Photos are only kept on this device.' });
   try {
     if (req.method === 'GET') {
