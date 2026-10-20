@@ -17,6 +17,7 @@ export const strings = {
   'map.routeBusy': 'पैदल रास्ता निकाला जा रहा है',
   'map.routeResult': 'पैदल {distance}, लगभग {minutes} मिनट',
   'map.routeFailed': 'पैदल रास्ता नहीं मिला। सीधी दूरी {distance} है।',
+  'map.routeHere': 'आप जगह पर ही हैं, GPS के हिसाब से {distance} दूर।',
   'map.routeNoLocation': 'आपकी लोकेशन बंद है, इसलिए रास्ता नहीं निकाला जा सकता।',
   'map.googleWalking': 'आप जहाँ हैं, वहाँ से पैदल रास्ता।',
   'map.you': 'आप',

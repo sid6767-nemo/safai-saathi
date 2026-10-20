@@ -17,6 +17,7 @@ export const strings = {
   'map.routeBusy': 'ನಡೆಯುವ ದಾರಿ ಲೆಕ್ಕ ಹಾಕಲಾಗುತ್ತಿದೆ',
   'map.routeResult': 'ನಡೆದರೆ {distance}, ಸುಮಾರು {minutes} ನಿಮಿಷ',
   'map.routeFailed': 'ನಡೆಯುವ ದಾರಿ ಸಿಗಲಿಲ್ಲ. ನೇರ ಅಂತರ {distance}.',
+  'map.routeHere': 'ನೀವು ಈಗಾಗಲೇ ಸ್ಥಳದಲ್ಲೇ ಇದ್ದೀರಿ, GPS ಪ್ರಕಾರ {distance} ದೂರ.',
   'map.routeNoLocation': 'ನಿಮ್ಮ ಸ್ಥಳ ಆಫ್ ಆಗಿದೆ, ಹಾಗಾಗಿ ದಾರಿ ಲೆಕ್ಕ ಹಾಕಲಾಗದು.',
   'map.googleWalking': 'ನೀವು ಇರುವ ಸ್ಥಳದಿಂದ ನಡೆಯುವ ದಾರಿ.',
   'map.you': 'ನೀವು',

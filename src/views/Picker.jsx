@@ -140,7 +140,7 @@ function ActiveJob({ job, here, profile, highlight, markRef }) {
           {t('picker.lastReject', { title: last.title })}
         </p>
       )}
-      <SpotMap lat={job.lat} lng={job.lng} />
+      <SpotMap lat={job.lat} lng={job.lng} walk={!atSpot} />
       <p className="map-note">{t('map.circle', { m: CONFIG.proofRadiusM })}</p>
       <a ref={markRef} className="btn btn-primary btn-block" href={`#/proof/${job.id}`}>
         {t('picker.markCleaned')}

@@ -12,11 +12,10 @@ import { t } from './i18n.js';
 const LEAFLET_VERSION = '1.9.4';
 const LEAFLET_JS = `https://cdnjs.cloudflare.com/ajax/libs/leaflet/${LEAFLET_VERSION}/leaflet.js`;
 const LEAFLET_CSS = `https://cdnjs.cloudflare.com/ajax/libs/leaflet/${LEAFLET_VERSION}/leaflet.css`;
-// OSRM's public demo server only serves its car profile, so the line it returns is a street route
-// and its `duration` is a driving time. The shape is still what a picker would walk, but the time
-// is estimated here from distance instead.
-const OSRM = 'https://router.project-osrm.org/route/v1/driving';
-const WALK_METRES_PER_MIN = 80; // ~4.8 km/h
+// A walking route from the FOSSGIS OSRM server (OpenStreetMap Germany). It follows footpaths and
+// ignores one-way streets; the car-only demo server sent a picker 2 km round Bengaluru's one-way
+// loops to reach a spot 1 m away.
+const WALK_ROUTER = 'https://routing.openstreetmap.de/routed-foot/route/v1/driving';
 
 let configPromise;
 let leafletPromise;
@@ -97,8 +96,11 @@ export async function walkFromHere({ L, map }, point) {
   } catch {
     return t('map.routeNoLocation');
   }
+  // Inside the proof circle there's nothing to walk.
+  const straight = distanceM(from, point);
+  if (straight <= CONFIG.proofRadiusM) return t('map.routeHere', { distance: formatDistance(straight) });
   try {
-    const url = `${OSRM}/${from.lng},${from.lat};${point.lng},${point.lat}?overview=full&geometries=geojson`;
+    const url = `${WALK_ROUTER}/${from.lng},${from.lat};${point.lng},${point.lat}?overview=full&geometries=geojson`;
     const res = await fetch(url, { signal: AbortSignal.timeout(12_000) });
     const route = (await res.json())?.routes?.[0];
     if (!route) throw new Error('no route');
@@ -116,9 +118,9 @@ export async function walkFromHere({ L, map }, point) {
       .addTo(map)
       .bindTooltip(t('map.you'));
     map.fitBounds(line.getBounds(), { padding: [24, 24] });
-    const minutes = Math.max(1, Math.round(route.distance / WALK_METRES_PER_MIN));
+    const minutes = Math.max(1, Math.round(route.duration / 60));
     return t('map.routeResult', { distance: formatDistance(route.distance), minutes });
   } catch {
-    return t('map.routeFailed', { distance: formatDistance(distanceM(from, point)) });
+    return t('map.routeFailed', { distance: formatDistance(straight) });
   }
 }

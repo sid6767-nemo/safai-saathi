@@ -192,9 +192,10 @@ This is prototype-grade: anyone with the link can add jobs, and there are no acc
 The spot is shown on a map inside the app, with a circle at the 30 m radius the proof photo has to
 be taken inside. The maximise button opens it full screen, clear of the action buttons, and
 **Show the walk from here** draws the route from where the picker is standing, with the distance and
-a rough walking time. The line comes from [OSRM](https://project-osrm.org/)'s free public server,
-which serves only its car profile, so the app follows that street route but works the walking time
-out from the distance itself (about 4.8 km/h) rather than trusting OSRM's driving duration.
+a walking time. The line comes from the free walking profile of [OSRM](https://project-osrm.org/)
+run by FOSSGIS (routing.openstreetmap.de), so it uses footpaths and ignores one-way streets; a car
+route once sent a picker 2 km round a one-way loop to reach a spot 1 m away. Inside the 30 m circle
+the button is hidden, because there's nothing to walk.
 
 Set `MAPS_EMBED_KEY` (a [Google Maps Embed](https://developers.google.com/maps/documentation/embed/get-api-key)
 key, which needs a Google Cloud billing account even though the Embed API itself is free) and the

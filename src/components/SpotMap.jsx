@@ -94,7 +94,7 @@ function BigMap({ point, autoWalk, onClose }) {
   );
 }
 
-export default function SpotMap({ lat, lng }) {
+export default function SpotMap({ lat, lng, walk = true }) {
   const point = { lat, lng };
   const canvas = useRef(null);
   const { failed } = useMap(canvas, point, false);
@@ -115,9 +115,11 @@ export default function SpotMap({ lat, lng }) {
           ⤢
         </button>
       </div>
-      <button type="button" className="btn btn-outline btn-block map-walk" onClick={() => setBig('walk')}>
-        {t('map.route')}
-      </button>
+      {walk && (
+        <button type="button" className="btn btn-outline btn-block map-walk" onClick={() => setBig('walk')}>
+          {t('map.route')}
+        </button>
+      )}
       {big && <BigMap point={point} autoWalk={big === 'walk'} onClose={() => setBig(false)} />}
     </>
   );

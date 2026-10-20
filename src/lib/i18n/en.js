@@ -18,6 +18,7 @@ export const strings = {
   'map.routeBusy': 'Working out the walk',
   'map.routeResult': '{distance} on foot, about {minutes} min',
   'map.routeFailed': "Couldn't get a walking route. It's {distance} in a straight line.",
+  'map.routeHere': "You're already at the spot, {distance} away by GPS.",
   'map.routeNoLocation': "Your location is off, so the walk can't be worked out.",
   'map.googleWalking': 'Walking directions from where you are.',
   'map.you': 'You',
